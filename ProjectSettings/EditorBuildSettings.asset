@@ -6,8 +6,40 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/SampleScene.unity
-    guid: 8c9cfa26abfee488c85f1582747f6a02
-  m_configObjects:
-    com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 2bcd2660ca9b64942af0de543d8d7100, type: 3}
+    path: Assets/FelizPrimerDia_Escena/Escenas/00_Menu.unity
+    guid: 1ab33aa0f3a2c92498585a6c69bdacce
+  - enabled: 1
+    path: Assets/FelizPrimerDia_Escena/Escenas/0_PlantaBaja.unity
+    guid: 55f43ba3d0bbed6418e5ff96e4061578
+  - enabled: 1
+    path: Assets/FelizPrimerDia_Escena/Escenas/1_Piso1_Derecho.unity
+    guid: af6edccf3c906604ba0164638474cbe2
+  - enabled: 1
+    path: Assets/FelizPrimerDia_Escena/Escenas/2_Piso2_Periodismo.unity
+    guid: 82918670f7a474745bd59c8be520cdb2
+  - enabled: 1
+    path: Assets/FelizPrimerDia_Escena/Escenas/3_Piso3_Medicina.unity
+    guid: 3837ea65c3a112c418cb721fb5dccb11
+  - enabled: 1
+    path: Assets/FelizPrimerDia_Escena/Escenas/4_Piso4_Sistemas.unity
+    guid: d3fb2359e62d1b24a96998aa454b94a3
+  - enabled: 1
+    path: Assets/FelizPrimerDia_Escena/Escenas/5_Persecuciones.unity
+    guid: 4a16c7ccf3ebcea4c85ef0afeeeb161f
+  - enabled: 1
+    path: Assets/FelizPrimerDia_Escena/Escenas/6_Bienvenida.unity
+    guid: fc2f865ff9663224daa454460a8a4859
+  - enabled: 1
+    path: Assets/FelizPrimerDia_Escena/Escenas/7_CuartoSecreto.unity
+    guid: 539d2106c43420a4b9650aad5f43590f
+  - enabled: 1
+    path: Assets/FelizPrimerDia_Escena/Escenas/8_Cinematicas.unity
+    guid: e6d58e7dd27f86d46952135dd46a774c
+  - enabled: 1
+    path: Assets/FelizPrimerDia_Escena/Escenas/9_Recuerdos.unity
+    guid: c54745d4450fc9242b6d9ef6dccb2755
+  - enabled: 1
+    path: Assets/FelizPrimerDia_Escena/Escenas/10_Pantallas.unity
+    guid: d8120a26629b419468d1243688376347
+  m_configObjects: {}
   m_UseUCBPForAssetBundles: 0

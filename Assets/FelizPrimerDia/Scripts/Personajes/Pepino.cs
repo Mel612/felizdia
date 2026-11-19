@@ -24,6 +24,34 @@ public class Pepino : MonoBehaviour
     float aturdidoHasta;
     bool revisando;            // va a revisar un casillero que recuerda
     Vector2 casilleroRevisar;
+    bool investigando;         // escuchó un ruido (una botella, o a Valeria corriendo) y va a ver
+    Vector2 puntoRuido;
+    float esperaRuido;
+    static float tAvisoOido = -100f;
+
+    // Un ruido en el mundo: los Pepinos cercanos del mismo piso van a ver qué fue.
+    // fuerte = una botella que se rompe: distrae incluso al que te está persiguiendo si te perdió de vista.
+    public static int Ruido(Vector2 pos, float radio, bool fuerte)
+    {
+        int n = 0;
+        foreach (Pepino p in Todos)
+        {
+            if (p == null || p.enPersecucion || p.rb == null || !p.sr.enabled) continue;
+            if (Mapa.PisoDe(p.rb.position) != Mapa.PisoDe(pos)) continue;
+            if (Vector2.Distance(p.rb.position, pos) > radio) continue;
+            if (p.estado == Estado.Caza)
+            {
+                if (!fuerte) continue;
+                p.estado = Estado.Patrulla;
+            }
+            p.investigando = true;
+            p.puntoRuido = pos;
+            p.esperaRuido = 0f;
+            p.revisando = false;
+            n++;
+        }
+        return n;
+    }
 
     public static int Cazando;      // cuántos Pepinos te están persiguiendo (para la música)
     public static readonly List<Pepino> Todos = new List<Pepino>();
@@ -135,6 +163,7 @@ public class Pepino : MonoBehaviour
         float cerca = mismoPiso ? Mathf.Clamp01(1f - (d - 1.5f) / 9f) : 0f;
         if (estado == Estado.Caza) cerca = Mathf.Max(cerca, 0.75f);
         Sonido.Latido(cerca);
+        Sonido.Distorsion(cerca * 0.85f);
         if (cerca > 0.05f && rb.linearVelocity.sqrMagnitude > 0.1f)
         {
             tPaso -= Time.deltaTime;
@@ -214,10 +243,25 @@ public class Pepino : MonoBehaviour
             return;
         }
 
+        // Si corres cerca, te escucha (aunque no te vea) y viene a ver
+        if (!teVe && estado != Estado.Caza && mismoPiso && jugador.Corriendo &&
+            Vector2.Distance(yo, pj) < 4.5f * Dificultad.VisionPepino)
+        {
+            if (!investigando && Time.time - tAvisoOido > 8f)
+            {
+                tAvisoOido = Time.time;
+                Juego.I.ui.Toast("El Pepino te ESCUCHÓ correr... Camina despacio cerca de él.", 3f);
+            }
+            investigando = true;
+            puntoRuido = pj;
+            esperaRuido = 0f;
+        }
+
         Vector2 destino;
         float vel;
         if (estado == Estado.Caza)
         {
+            investigando = false;
             vel = velocidadCaza;
             if (teVe) destino = pj;
             else
@@ -236,6 +280,19 @@ public class Pepino : MonoBehaviour
                 rb.linearVelocity = Vector2.zero;
                 StartCoroutine(Atrapada());
                 return;
+            }
+        }
+        else if (investigando)
+        {
+            // Va a ver el ruido, mira un rato y vuelve a su ruta
+            vel = velocidadPatrulla * 1.45f;
+            destino = puntoRuido;
+            if (Vector2.Distance(yo, puntoRuido) < 0.6f)
+            {
+                vel = 0f;
+                esperaRuido += Time.fixedDeltaTime;
+                if (sr != null && Mathf.Repeat(esperaRuido, 0.6f) < Time.fixedDeltaTime) sr.flipX = !sr.flipX;
+                if (esperaRuido > 1.8f) { investigando = false; indiceRuta = RutaMasCercana(yo); }
             }
         }
         else if (revisando)
@@ -265,7 +322,8 @@ public class Pepino : MonoBehaviour
 
         Vector2 dir = destino - yo;
         rb.linearVelocity = dir.sqrMagnitude > 0.01f ? dir.normalized * vel : Vector2.zero;
-        alerta.gameObject.SetActive(estado == Estado.Caza);
+        alerta.text = estado == Estado.Caza ? "!" : "?";
+        alerta.gameObject.SetActive(estado == Estado.Caza || investigando);
     }
 
     // Te alcanzó: empieza la persecución de lado. Si llegas a las escaleras, te salvas.
@@ -274,7 +332,22 @@ public class Pepino : MonoBehaviour
         enPersecucion = true;
         int piso = Mapa.PisoDe(rb.position);
         Juego.I.ui.Golpe(0.5f);
-        yield return Juego.I.dialogo.DecirCo("Pepino", "(Te agarra de la mochila. Te sueltas de un tirón...)", "¡CORRE!");
+
+        // Forcejeo: si presionas E rápido, te sueltas y sigues explorando
+        Resultado<bool> libre = new Resultado<bool>();
+        yield return Forcejeo.Jugar(Juego.I, transform, libre);
+        if (libre.valor)
+        {
+            enPersecucion = false;
+            estado = Estado.Patrulla;
+            investigando = false;
+            indiceRuta = RutaMasCercana(rb.position);
+            aturdidoHasta = Time.time + 3.5f;
+            alerta.gameObject.SetActive(false);
+            Juego.I.ui.Toast("¡TE SOLTASTE! Lo dejaste aturdido unos segundos. Corre y escóndete.", 3.5f);
+            yield break;
+        }
+        yield return Juego.I.dialogo.DecirCo("Pepino", "(No pudiste soltarte... pero le pisas el pie y te zafas un segundo.)", "¡CORRE!");
         // La persecución de lado es otra escena (5_Persecuciones)
         if (Partida.PuedeCargar(Partida.EscenaPersecuciones))
         {
@@ -298,6 +371,36 @@ public class Pepino : MonoBehaviour
         aturdidoHasta = Time.time + 12f;
         alerta.gameObject.SetActive(false);
         Juego.I.ui.Toast("¡Escapaste! Llegaste a las escaleras. El Pepino perdió tu rastro... por ahora.", 4f);
+    }
+
+    // El flash del celular: lo ciega unos segundos y pierde tu rastro
+    public bool Cegar(Vector2 desde, Vector2 mirando)
+    {
+        if (enPersecucion || rb == null || !sr.enabled) return false;
+        Vector2 a = rb.position - desde;
+        float d = a.magnitude;
+        if (d > 6f) return false;
+        if (d > 2.2f && Vector2.Dot(a.normalized, mirando) < 0.35f) return false;   // tiene que estar adelante
+        if (Physics2D.Linecast(desde, rb.position).collider != null) return false;   // una pared en medio
+        aturdidoHasta = Time.time + 3.5f;
+        estado = Estado.Patrulla;
+        investigando = false;
+        revisando = false;
+        indiceRuta = RutaMasCercana(rb.position);
+        alerta.text = "*";
+        alerta.gameObject.SetActive(true);
+        StartCoroutine(BlancoUnInstante());
+        return true;
+    }
+
+    IEnumerator BlancoUnInstante()
+    {
+        Color antes = sr.color;
+        sr.color = new Color(1f, 1f, 1f, 1f);
+        yield return new WaitForSeconds(0.15f);
+        sr.color = EsQuinto ? new Color(1f, 0.82f, 0.45f) : Color.white;
+        yield return new WaitForSeconds(3.3f);
+        if (alerta != null && estado != Estado.Caza) alerta.gameObject.SetActive(false);
     }
 
     // El jugador se metió en un casillero que el Pepino recuerda de otro día.

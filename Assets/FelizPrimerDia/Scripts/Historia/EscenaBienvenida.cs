@@ -19,6 +19,19 @@ public class EscenaBienvenida : MonoBehaviour
 
     public Vector2 Entrada { get { return new Vector2(0f, -Alto / 2f + 1.6f); } }
 
+    // La morenada se deforma cerca de los Pepinos... y un poquito más cerca del verdadero (pista para el oído)
+    void Update()
+    {
+        if (juego == null || juego.jugador == null) return;
+        for (int i = 0; i < pepinos.Count; i++)
+        {
+            if (pepinos[i] == null) continue;
+            float d = Vector2.Distance(juego.jugador.Posicion, pepinos[i].transform.position);
+            float cerca = Mathf.Clamp01(1f - (d - 1.2f) / 6f);
+            Sonido.Distorsion(cerca * (i == pepinoReal ? 0.9f : 0.55f));
+        }
+    }
+
     Dialogo D { get { return juego.dialogo; } }
     UIJuego UI { get { return juego.ui; } }
 

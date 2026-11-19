@@ -43,7 +43,14 @@ public class Sonido : MonoBehaviour
 
     void Preparar()
     {
-        musA = Fuente(true); musB = Fuente(true);
+        // La música va en su propio objeto, con un filtro de distorsión (se usa cuando el Pepino está cerca)
+        GameObject gm = new GameObject("Música");
+        gm.transform.SetParent(transform, false);
+        musA = Fuente(true, gm); musB = Fuente(true, gm);
+        distorsionador = gm.AddComponent<AudioDistortionFilter>();
+        distorsionador.distortionLevel = 0f;
+        pasaBajos = gm.AddComponent<AudioLowPassFilter>();
+        pasaBajos.cutoffFrequency = 22000f;
         ambiente = Fuente(true);
         latido = Fuente(true);
         efectos = new AudioSource[10];
@@ -58,9 +65,19 @@ public class Sonido : MonoBehaviour
         foreach (string n in Sintetizador.Efectos) { Sintetizador.Clip(n); yield return null; }
     }
 
-    AudioSource Fuente(bool bucle)
+    AudioDistortionFilter distorsionador;
+    AudioLowPassFilter pasaBajos;
+    static float pedidoDistorsion;
+    float distorsion;
+
+    // La música se deforma (más lenta, temblorosa y sucia) mientras más cerca está el Pepino. 0..1
+    public static void Distorsion(float v) { pedidoDistorsion = Mathf.Max(pedidoDistorsion, Mathf.Clamp01(v)); }
+
+    AudioSource Fuente(bool bucle) { return Fuente(bucle, gameObject); }
+
+    AudioSource Fuente(bool bucle, GameObject donde)
     {
-        AudioSource a = gameObject.AddComponent<AudioSource>();
+        AudioSource a = donde.AddComponent<AudioSource>();
         a.playOnAwake = false;
         a.loop = bucle;
         a.spatialBlend = 0f;
@@ -151,6 +168,15 @@ public class Sonido : MonoBehaviour
         actual.volume = fundido * vm;
         vieja.volume = (1f - fundido) * vm;
         if (fundido >= 1f && vieja.isPlaying) vieja.Stop();
+
+        // Distorsión de la música por cercanía del Pepino
+        distorsion = Mathf.MoveTowards(distorsion, pedidoDistorsion, Time.unscaledDeltaTime * 1.2f);
+        pedidoDistorsion = 0f;
+        float tiembla = Mathf.Sin(Time.unscaledTime * 6.3f) * 0.035f + Mathf.Sin(Time.unscaledTime * 1.7f) * 0.02f;
+        float p = 1f - 0.2f * distorsion + tiembla * distorsion;
+        musA.pitch = p; musB.pitch = p;
+        if (distorsionador != null) distorsionador.distortionLevel = distorsion * 0.75f;
+        if (pasaBajos != null) pasaBajos.cutoffFrequency = Mathf.Lerp(22000f, 1800f, distorsion);
 
         // Latido: más fuerte y rápido mientras más cerca está el peligro
         float lv = Silencio ? 0f : latidoObjetivo;

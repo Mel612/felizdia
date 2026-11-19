@@ -19,7 +19,7 @@ public static class Sintetizador
         "alarma", "sello", "logro", "click", "blip", "estatica", "apagon", "ascensor", "puerta", "salto",
         "respiracion", "zumbido", "trueno"
     };
-    public static readonly string[] Temas = { "m_menu", "m_campus", "m_noche", "m_tension", "m_persecucion", "m_fiesta", "m_triste", "m_oscuro" };
+    public static readonly string[] Temas = { "m_menu", "m_campus", "m_noche", "m_tension", "m_persecucion", "m_fiesta", "m_triste", "m_oscuro", "m_morenada" };
 
     public static AudioClip Clip(string nombre)
     {
@@ -275,6 +275,7 @@ public static class Sintetizador
             case "m_fiesta": return MusicaFiesta();
             case "m_triste": return MusicaTriste();
             case "m_oscuro": return MusicaOscuro();
+            case "m_morenada": return MusicaMorenada();
         }
         return null;
     }
@@ -388,6 +389,74 @@ public static class Sintetizador
             }
         PasaAltos(b, 60f);
         return Plegar(b, largo);
+    }
+
+    // Morenada paceña (la Bienvenida): paso pesado de bombo y platillo, la matraca
+    // girando, la banda de bronces con la melodía en menor y una tarka respondiendo.
+    static float[] MusicaMorenada()
+    {
+        float bpm = 84f, negra = 60f / bpm, sem = negra / 4f;
+        int compases = 8;
+        float largo = compases * 4 * negra;
+        float[] b = Buf(largo + 2f);
+        // Re menor: Dm  Gm  A7  Dm | Dm  C  Bb  A7
+        int[][] acordes = { new[] { 50, 53, 57 }, new[] { 55, 58, 62 }, new[] { 57, 61, 64 }, new[] { 50, 53, 57 },
+                            new[] { 50, 53, 57 }, new[] { 48, 52, 55 }, new[] { 46, 50, 53 }, new[] { 57, 61, 64 } };
+        // Melodía de bronces (negra = 4 semicorcheas). 0 = silencio
+        int[] mel = { 69, 0, 69, 70,  69, 67, 65, 64,   67, 0, 67, 69,  70, 69, 67, 65,
+                      64, 0, 64, 65,  67, 65, 64, 62,   65, 64, 62, 61,  62, 0, 0, 0,
+                      69, 0, 69, 70,  72, 70, 69, 67,   67, 0, 64, 65,  67, 65, 64, 62,
+                      65, 0, 65, 64,  62, 61, 62, 64,   61, 0, 57, 61,  62, 0, 0, 0 };
+        for (int c = 0; c < compases; c++)
+            for (int k = 0; k < 16; k++)
+            {
+                float t0 = (c * 16 + k) * sem;
+                // Bombo en 1 y 3 (paso de morenada), platillo en 2 y 4
+                if (k == 0 || k == 8) Golpe(b, t0, 55f, 0.22f, 1f);
+                if (k == 6) Golpe(b, t0, 60f, 0.12f, 0.5f);
+                if (k == 4 || k == 12) Ruido(b, t0, 0.35f, 0.32f, 400 + c * 16 + k, 0.002f, 6f);
+                // Matraca: ráfaga de golpecitos secos
+                if (k % 2 == 1) Ruido(b, t0, 0.05f, 0.14f, 500 + c * 16 + k, 0.0005f, 70f);
+                // Bajo (tuba)
+                if (k == 0 || k == 8) Bajo(b, t0, Nota(acordes[c][0] - 12), negra * 1.6f, 0.55f);
+                if (k == 4 || k == 12) Bajo(b, t0, Nota(acordes[c][2] - 24), negra * 0.9f, 0.4f);
+                // Acordes de la banda
+                if (k == 2 || k == 10) foreach (int nn in acordes[c]) Bronce(b, t0, Nota(nn), sem * 1.6f, 0.07f);
+                // Melodía
+                int nota = mel[(c * 16 + k) % mel.Length];
+                if (nota > 0) Bronce(b, t0, Nota(nota), sem * 1.8f, 0.2f);
+                // Tarka respondiendo en los compases pares
+                if (c % 2 == 1 && (k == 2 || k == 6 || k == 10)) Tarka(b, t0, Nota(acordes[c][1] + 24), sem * 1.5f, 0.06f);
+            }
+        PasaBajos(b, 6000f);
+        Eco(b, 0.22f, 0.18f);
+        return Plegar(b, largo);
+    }
+
+    // Bronce: sierra con ataque suave y vibrato (trompeta / bombardino)
+    static void Bronce(float[] b, float t0, float f, float dur, float vol)
+    {
+        int i0 = (int)(t0 * FS), n = (int)((dur + 0.08f) * FS);
+        for (int k = 0; k < n && i0 + k < b.Length; k++)
+        {
+            float t = k / (float)FS;
+            float env = Mathf.Min(1f, t / 0.03f) * (t > dur ? Mathf.Max(0f, 1f - (t - dur) / 0.08f) : 1f);
+            float fv = f * (1f + 0.006f * Mathf.Sin(2f * Mathf.PI * 5.5f * t));
+            b[i0 + k] += (Sierra(fv, t) * 0.6f + Mathf.Sin(2f * Mathf.PI * fv * t) * 0.5f) * env * vol;
+        }
+    }
+
+    // Tarka: flauta cuadrada, áspera y con aire
+    static void Tarka(float[] b, float t0, float f, float dur, float vol)
+    {
+        int i0 = (int)(t0 * FS), n = (int)(dur * FS);
+        for (int k = 0; k < n && i0 + k < b.Length; k++)
+        {
+            float t = k / (float)FS;
+            float env = Mathf.Min(1f, t / 0.02f) * Mathf.Max(0f, 1f - t / dur);
+            float cuad = Mathf.Sin(2f * Mathf.PI * f * t) > 0f ? 1f : -1f;
+            b[i0 + k] += (cuad * 0.5f + (Azar(i0 + k) * 2f - 1f) * 0.25f) * env * vol;
+        }
     }
 
     // Piano lento y triste (finales).

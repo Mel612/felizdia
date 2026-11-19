@@ -19,6 +19,18 @@ public abstract class Facultad : MonoBehaviour
 
     protected abstract string SelloId { get; }
     protected abstract string NombreCarrera { get; }
+
+    // Color de la tinta del sello gigante
+    Color ColorSello
+    {
+        get
+        {
+            if (SelloId == Ids.SelloMedicina) return Util.Hex("#2a9d8f");
+            if (SelloId == Ids.SelloDerecho) return Util.Hex("#c1121f");
+            if (SelloId == Ids.SelloPeriodismo) return Util.Hex("#1d4ed8");
+            return Util.Hex("#7b2cbf");
+        }
+    }
     protected abstract void Montar();
     protected abstract IEnumerator EventoTerror();
 
@@ -110,9 +122,10 @@ public abstract class Facultad : MonoBehaviour
         }
 
         Memoria.Obtener(SelloId);
-        UI.Toast("SELLO OBTENIDO: " + NombreCarrera + "  (" + Memoria.Cuantos(Ids.Sellos) + "/4)", 4f);
+        int sellosHoy = Memoria.Cuantos(Ids.Sellos);
+        UI.SelloGrande(NombreCarrera, sellosHoy, ColorSello);
+        UI.Toast(sellosHoy >= 4 ? "¡PASAPORTE COMPLETO! Entra al Auditorio a las 18:00." : "SELLO OBTENIDO: " + NombreCarrera + "  (" + sellosHoy + "/4)", 4f);
         UI.Destello(new Color(1f, 0.82f, 0.4f), 0.3f);
-        Sonido.Efecto("sello");
 
         enEvento = true;
         Sonido.Efecto("apagon", 0.7f, 1f);

@@ -144,7 +144,7 @@ public class MenuInicio : MonoBehaviour
         txtOpciones.lineSpacing = 1.25f;
         txtOpciones.gameObject.AddComponent<Outline>().effectColor = Color.black;
 
-        Util.TextoUI(raiz, "Flechas: elegir     E: aceptar     Esc: volver     M: sonido", 22, new Color(1, 1, 1, 0.5f), TextAnchor.LowerLeft, new Vector2(0.06f, 0.015f), new Vector2(0.5f, 0.07f), cero, cero);
+        Util.TextoUI(raiz, "Flechas: elegir     E: aceptar     M: sonido", 22, new Color(1, 1, 1, 0.5f), TextAnchor.LowerLeft, new Vector2(0.06f, 0.015f), new Vector2(0.5f, 0.07f), cero, cero);
         txtMateo = Util.TextoUI(raiz, "", 22, Color.white, TextAnchor.LowerRight, new Vector2(0.5f, 0.015f), new Vector2(0.97f, 0.07f), cero, cero);
         txtMateo.gameObject.AddComponent<Outline>().effectColor = Color.black;
 
@@ -201,17 +201,20 @@ public class MenuInicio : MonoBehaviour
         if (farol != null) farol.color = new Color(1f, 0.85f, 0.55f, Random.value < 0.03f ? 0.05f : 0.35f);
 
         int n = Entrada.NumeroBajado();
-        if (eligiendoNoche)
+        if (eligiendoNoche || eligiendoEspacio)
         {
-            int max = NocheMonitoreo.NochesDesbloqueadas;
-            if (n >= 1 && n <= max) { CerrarInfo(); StartCoroutine(JugarNoche(n)); return; }
-            if (Entrada.Avanzar() || Entrada.Bajada(Tecla.Saltar)) { CerrarInfo(); Sonido.Efecto("click"); }
-            return;
-        }
-        if (eligiendoEspacio)
-        {
-            if (n >= 1 && n <= Guardado.Espacios && Guardado.Existe(n)) { CerrarInfo(); StartCoroutine(CargarEspacio(n)); return; }
-            if (Entrada.Avanzar() || Entrada.Bajada(Tecla.Saltar)) { CerrarInfo(); Sonido.Efecto("click"); }
+            // Flechas para mover la flecha, E para aceptar, Esc para volver (los números siguen sirviendo)
+            int total = eligiendoNoche ? NocheMonitoreo.NochesDesbloqueadas + 1 : Guardado.Espacios + 1;   // el último es "Volver"
+            if (Entrada.Bajada(Tecla.Arriba)) { selInfo = (selInfo + total - 1) % total; Sonido.Efecto("click", 0.5f, 1f); DibujarInfo(); }
+            if (Entrada.Bajada(Tecla.Abajo)) { selInfo = (selInfo + 1) % total; Sonido.Efecto("click", 0.5f, 1f); DibujarInfo(); }
+            if (n < 1 && Entrada.Avanzar()) n = selInfo == total - 1 ? 99 : selInfo + 1;
+            if (Entrada.Bajada(Tecla.Saltar) || n == 99) { CerrarInfo(); Sonido.Efecto("click"); return; }
+            if (eligiendoNoche && n >= 1 && n <= NocheMonitoreo.NochesDesbloqueadas) { CerrarInfo(); StartCoroutine(JugarNoche(n)); return; }
+            if (eligiendoEspacio && n >= 1 && n <= Guardado.Espacios)
+            {
+                if (Guardado.Existe(n)) { CerrarInfo(); StartCoroutine(CargarEspacio(n)); }
+                else Sonido.Efecto("blip", 0.5f, 0.6f);          // espacio vacío
+            }
             return;
         }
         if (infoAbierta)
@@ -219,6 +222,7 @@ public class MenuInicio : MonoBehaviour
             if (Entrada.Avanzar() || Entrada.Bajada(Tecla.Saltar) || n > 0) { CerrarInfo(); Sonido.Efecto("click"); }
             return;
         }
+        if (Entrada.Bajada(Tecla.Saltar)) { StartCoroutine(PreguntarSalir()); return; }     // Esc en el menú: ¿salir?
         if (Entrada.Bajada(Tecla.Arriba)) { seleccion = (seleccion + ids.Count - 1) % ids.Count; Sonido.Efecto("click", 0.6f, 1f); Dibujar(); }
         if (Entrada.Bajada(Tecla.Abajo)) { seleccion = (seleccion + 1) % ids.Count; Sonido.Efecto("click", 0.6f, 1f); Dibujar(); }
         if (n >= 1 && n <= ids.Count) { seleccion = n - 1; Dibujar(); Elegir(); }
@@ -268,6 +272,22 @@ public class MenuInicio : MonoBehaviour
         ocupado = false;
     }
 
+    IEnumerator PreguntarSalir()
+    {
+        ocupado = true;
+        Resultado<bool> r = new Resultado<bool>();
+        yield return StartCoroutine(PanelConfirmar.Preguntar(transform, "¿Seguro que quieres salir del juego?",
+            Guardado.HayAlguno ? "Tus partidas guardadas no se pierden." : "", r));
+        if (r.valor)
+        {
+            juego.ui.Telon(1f, 0.6f);
+            Sonido.Musica(null, 0.6f);
+            yield return new WaitForSeconds(0.7f);
+            PanelConfirmar.SalirDelJuego();
+        }
+        ocupado = false;
+    }
+
     IEnumerator VerCreditos()
     {
         ocupado = true;
@@ -277,6 +297,36 @@ public class MenuInicio : MonoBehaviour
         Sonido.Musica("m_menu", 1.5f);
         Dibujar();
         ocupado = false;
+    }
+
+    int selInfo;    // opción marcada en Cargar partida / Cuarto secreto
+
+    void DibujarInfo()
+    {
+        string t;
+        if (eligiendoEspacio)
+        {
+            t = "<b>CARGAR PARTIDA</b>\n\nLas partidas se guardan en las MÁQUINAS DE ESCRIBIR\nque hay junto a las escaleras de cada piso.\n\n";
+            for (int i = 1; i <= Guardado.Espacios; i++)
+                t += (selInfo == i - 1 ? "<color=#ff4d4d><b>></b></color> " : "   ") + "<color=#ffd166>" + i + "</color>   " + Guardado.Resumen(Guardado.Leer(i)) + "\n\n";
+            t += (selInfo == Guardado.Espacios ? "<color=#ff4d4d><b>>  VOLVER</b></color>" : "   <color=#888888>VOLVER</color>");
+            txtInfo.text = t + "\n\n<color=#888888>↑ ↓ elegir  ·  E cargar  ·  Esc volver</color>";
+        }
+        else if (eligiendoNoche)
+        {
+            int max = NocheMonitoreo.NochesDesbloqueadas;
+            t = "<b><color=#c77dff>CUARTO SECRETO</color></b>\n<size=22><color=#888888>nivel escondido · lo encontraste</color></size>\n\n" +
+                "Sobrevive de 12 AM a 6 AM en el viejo cuarto de monitoreo.\n\n" +
+                "<color=#ffd166>A / D</color>  cerrar o abrir las puertas\n<color=#ffd166>W</color>  subir o bajar el monitor\n<color=#ffd166>1-6</color>  elegir cámara\n" +
+                "Las puertas y las cámaras gastan energía.\n\n";
+            for (int i = 1; i <= 3; i++)
+            {
+                if (i > max) { t += "<color=#555555>     NOCHE " + i + " (bloqueada)</color>\n"; continue; }
+                t += selInfo == i - 1 ? "<color=#ff4d4d><b>>  NOCHE " + i + "</b></color>\n" : "<color=#7bd389>     NOCHE " + i + "</color>\n";
+            }
+            t += selInfo == max ? "\n<color=#ff4d4d><b>>  VOLVER</b></color>" : "\n<color=#888888>     VOLVER</color>";
+            txtInfo.text = t + "\n\n<color=#888888>↑ ↓ elegir  ·  E aceptar  ·  Esc volver</color>";
+        }
     }
 
     void Elegir()
@@ -294,32 +344,14 @@ public class MenuInicio : MonoBehaviour
             }
             case "opciones": StartCoroutine(AbrirOpciones()); return;
             case "creditos": StartCoroutine(VerCreditos()); return;
-            case "salir": Partida.SalirDelJuego(); return;
+            case "salir": StartCoroutine(PreguntarSalir()); return;
         }
 
         infoAbierta = true;
         panelInfo.gameObject.SetActive(true);
-        if (id == "cargar")
-        {
-            eligiendoEspacio = true;
-            string t = "<b>CARGAR PARTIDA</b>\n\nLas partidas se guardan en las MÁQUINAS DE ESCRIBIR\nque hay junto a las escaleras de cada piso.\n\n";
-            for (int i = 1; i <= Guardado.Espacios; i++)
-                t += "<color=#ffd166>" + i + "</color>   " + Guardado.Resumen(Guardado.Leer(i)) + "\n\n";
-            txtInfo.text = t + "<color=#888888>Elige el espacio con su número  ·  E o Esc para volver</color>";
-        }
-        else if (id == "cuarto")
-        {
-            eligiendoNoche = true;
-            int max = NocheMonitoreo.NochesDesbloqueadas;
-            string t = "<b><color=#c77dff>CUARTO SECRETO</color></b>\n<size=22><color=#888888>nivel escondido · lo encontraste</color></size>\n\n" +
-                       "Sobrevive de 12 AM a 6 AM en el viejo cuarto de monitoreo.\n\n" +
-                       "<color=#ffd166>A / D</color>  cerrar o abrir las puertas\n<color=#ffd166>W</color>  subir o bajar el monitor\n<color=#ffd166>1-6</color>  elegir cámara\n" +
-                       "Las puertas y las cámaras gastan energía.\n\n";
-            for (int i = 1; i <= 3; i++)
-                t += i <= max ? "<color=#7bd389>" + i + "  ·  NOCHE " + i + "</color>\n" : "<color=#555555>" + i + "  ·  NOCHE " + i + " (bloqueada)</color>\n";
-            txtInfo.text = t + "\n<color=#888888>Elige la noche con su número  ·  E o Esc para volver</color>";
-        }
-        else if (id == "logros") txtInfo.text = "<size=22>" + Logros.Texto() + "</size>\n<color=#888888>E o Esc para volver</color>";
+        if (id == "cargar") { eligiendoEspacio = true; selInfo = Mathf.Max(0, Guardado.Ultimo() - 1); DibujarInfo(); }
+        else if (id == "cuarto") { eligiendoNoche = true; selInfo = 0; DibujarInfo(); }
+        else if (id == "logros") txtInfo.text = "<size=22>" + Logros.Texto() + "</size>\n<color=#888888>E para volver</color>";
         else if (id == "como")
             txtInfo.text =
                 "<b>CÓMO JUGAR</b>\n\n" +
@@ -332,6 +364,6 @@ public class MenuInicio : MonoBehaviour
                 "<color=#ffd166>Tab</color>  cuaderno de pistas y logros     <color=#ffd166>M</color>  sonido\n" +
                 "<color=#ffd166>P</color>  pausa (opciones, volver al menú)\n" +
                 "<color=#ffd166>Espacio</color>  saltar (persecuciones)     <color=#ffd166>Esc</color>  saltar cinemáticas\n\n" +
-                "<color=#888888>E o Esc para volver</color>";
+                "<color=#888888>E para volver</color>";
     }
 }

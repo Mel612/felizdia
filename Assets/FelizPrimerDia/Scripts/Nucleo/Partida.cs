@@ -70,9 +70,15 @@ public static class Partida
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
     static void AlIniciar() { NuevoDia(); }
 
+    public static int Lanzables;
+    public static float Bateria = 100f;          // batería del celular (el flash gasta)                 // botellas/latas que lleva Valeria (para distraer al Pepino)
+
     public static void NuevoDia()
     {
         Hora = -1f;
+        Lanzables = 0;
+        Bateria = 100f;
+        Celular.NuevoDia();
         Llegada = "inicio";
         PisoPersecucion = 1;
         PepinoAturdido = false;
@@ -140,17 +146,6 @@ public static class Partida
     {
         if (Juego.I != null) Hora = Juego.I.Hora;
         Cargar(EscenaBienvenida);
-    }
-
-    // Cierra el juego (en el editor de Unity, detiene el Play).
-    public static void SalirDelJuego()
-    {
-        Ajustes.Guardar();
-#if UNITY_EDITOR
-        UnityEditor.EditorApplication.isPlaying = false;
-#else
-        Application.Quit();
-#endif
     }
 
     // Vuelve a la pantalla de inicio (si la escena del menú existe; si no, a la Planta Baja)

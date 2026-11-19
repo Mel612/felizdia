@@ -22,6 +22,8 @@ public abstract class Minijuego : MonoBehaviour
     protected RectTransform area;      // zona central para dibujar el minijuego
     protected Text txtTitulo, txtInstrucciones, txtEstado, txtResultado;
     protected bool activo;
+    public static Minijuego Actual;          // el que está en pantalla (los controles táctiles muestran 1-4)
+    public bool UsaNumeros { get { return this is MJPreguntas || this is MJOrdenar; } }
     protected float tiempo;
 
     Action<bool> alTerminar;
@@ -45,6 +47,7 @@ public abstract class Minijuego : MonoBehaviour
         ConstruirPanel();
         Construir();
         activo = true;
+        Actual = this;
         frameInicio = Time.frameCount;
     }
 
@@ -93,6 +96,7 @@ public abstract class Minijuego : MonoBehaviour
     {
         if (!activo) return;
         activo = false;
+        if (Actual == this) Actual = null;
         StartCoroutine(Fin(exito, mensaje));
     }
 

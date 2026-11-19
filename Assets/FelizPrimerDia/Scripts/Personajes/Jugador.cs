@@ -18,6 +18,8 @@ public class Jugador : MonoBehaviour
     SpriteRenderer sr;
     Collider2D col;
     Vector2 entrada;
+    public Vector2 Mirando { get; private set; } = Vector2.right;     // última dirección en que se movió
+    public bool Corriendo { get; private set; }
     float tRastro;
     Interactuable cercano;
 
@@ -82,6 +84,8 @@ public class Jugador : MonoBehaviour
     {
         bool corre = Entrada.Presionada(Tecla.Correr);
         float v = corre ? velocidadCorrer : velocidad;
+        if (entrada.sqrMagnitude > 0.01f) Mirando = entrada.normalized;
+        Corriendo = corre && entrada.sqrMagnitude > 0.01f && !Escondido;
         rb.linearVelocity = entrada * v;
 
         // Pasos

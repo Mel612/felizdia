@@ -58,6 +58,14 @@ public static class Memoria
         Escapes = escapes;
     }
 
+    // Borra algo que se había aprendido (lo usa el tutorial)
+    public static void Olvidar(string id)
+    {
+        recuerdos.Remove(id);
+        ordenRecuerdos.Remove(id);
+        delDia.Remove(id);
+    }
+
     public static void NuevoDia()
     {
         delDia.Clear();

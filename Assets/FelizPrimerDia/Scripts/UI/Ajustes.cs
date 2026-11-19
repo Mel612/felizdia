@@ -106,7 +106,7 @@ public class PanelOpciones : MonoBehaviour
             sb.Append(i == sel ? "<color=#ff4d4d>> " : "   ").Append(nombres[i]).Append(i == sel ? "</color>" : "")
               .Append("\n      ").Append(barras[i]).Append("\n\n");
         sb.Append(sel == 4 ? "<color=#ff4d4d>> Volver</color>" : "   Volver");
-        sb.Append("\n\n<size=22><color=#888888>Arriba/abajo: elegir · Izq./der.: cambiar · E: aceptar · Esc: volver</color></size>");
+        sb.Append("\n\n<size=22><color=#888888>Arriba/abajo: elegir · Izquierda/derecha: cambiar · E: aceptar</color></size>");
         txt.text = sb.ToString();
     }
 
@@ -132,11 +132,9 @@ public class PanelOpciones : MonoBehaviour
 
 // Menú de pausa (tecla P):
 //   0 Continuar · 1 Guardar partida · 2 Opciones · 3 Guardar y volver al menú · 4 Volver al menú sin guardar
-//   5 Salir del juego (lo cierra aquí mismo; lo que no guardaste se pierde)
 public class PanelPausa : MonoBehaviour
 {
     static readonly string[] Ops = { "CONTINUAR", "GUARDAR PARTIDA", "OPCIONES", "GUARDAR Y VOLVER AL MENÚ", "VOLVER AL MENÚ SIN GUARDAR", "SALIR DEL JUEGO" };
-    const int OpSalir = 5;
     Text txt;
     int sel;
     bool listo, puedeGuardar;
@@ -163,7 +161,7 @@ public class PanelPausa : MonoBehaviour
         PanelPausa p = go.AddComponent<PanelPausa>();
         p.puedeGuardar = puedeGuardar;
         p.aviso = aviso ?? "";
-        RectTransform panel = Util.PanelArteCentro(go.transform, "Panel", new Color(0.04f, 0.03f, 0.07f, 0.95f), Util.Hex("#e63946"), Vector2.zero, new Vector2(900, 780));
+        RectTransform panel = Util.PanelArteCentro(go.transform, "Panel", new Color(0.04f, 0.03f, 0.07f, 0.95f), Util.Hex("#e63946"), Vector2.zero, new Vector2(900, 740));
         p.txt = Util.TextoRelleno(panel, "", 34, Color.white, TextAnchor.UpperCenter, 36);
         p.Dibujar();
         return p;
@@ -185,8 +183,7 @@ public class PanelPausa : MonoBehaviour
             sb.Append("\n\n");
         }
         if (!puedeGuardar) sb.Append("<size=20><color=#888888>Aquí no se puede guardar (solo en los pisos del edificio).</color></size>\n");
-        if (aviso != "") sb.Append("<size=22><color=#7bd389>").Append(aviso).Append("</color></size>\n");
-        sb.Append("<size=20><color=#888888>Flechas: elegir  ·  E: aceptar  ·  Esc o P: continuar</color></size>");
+        if (aviso != "") sb.Append("<size=22><color=#7bd389>").Append(aviso).Append("</color></size>");
         txt.text = sb.ToString();
     }
 
@@ -203,7 +200,6 @@ public class PanelPausa : MonoBehaviour
         if (Entrada.Bajada(Tecla.Arriba)) Mover(-1);
         if (Entrada.Bajada(Tecla.Abajo)) Mover(1);
         if (Entrada.Bajada(Tecla.Pausa) || Entrada.Bajada(Tecla.Saltar)) { sel = 0; listo = true; }
-        else if (Entrada.Avanzar() && sel == OpSalir) { Sonido.Efecto("blip", 0.6f, 0.8f); Partida.SalirDelJuego(); }
         else if (Entrada.Avanzar()) { Sonido.Efecto("blip", 0.6f, 0.8f); listo = true; }
     }
 }
@@ -260,5 +256,63 @@ public class PanelEspacios : MonoBehaviour
         if (Entrada.Bajada(Tecla.Abajo)) { sel = (sel + 1) % (Guardado.Espacios + 1); Sonido.Efecto("click", 0.5f, 1f); Dibujar(); }
         if (Entrada.Bajada(Tecla.Saltar)) { sel = Guardado.Espacios; listo = true; }
         else if (Entrada.Avanzar()) listo = true;
+    }
+}
+
+// ¿Seguro? Sí / No  (flechas para elegir, E para aceptar, Esc = No)
+public class PanelConfirmar : MonoBehaviour
+{
+    Text txt;
+    bool si, listo;
+    string pregunta, detalle;
+
+    public static IEnumerator Preguntar(Transform padre, string pregunta, string detalle, Resultado<bool> r)
+    {
+        GameObject go = new GameObject("Confirmar", typeof(RectTransform));
+        go.transform.SetParent(padre, false);
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = Vector2.zero; rt.anchorMax = Vector2.one; rt.offsetMin = rt.offsetMax = Vector2.zero;
+        Util.Panel(go.transform, "Oscuro", new Color(0f, 0f, 0f, 0.65f), Vector2.zero, Vector2.one, Vector2.zero, Vector2.zero);
+        PanelConfirmar p = go.AddComponent<PanelConfirmar>();
+        p.pregunta = pregunta;
+        p.detalle = detalle ?? "";
+        RectTransform panel = Util.PanelArteCentro(go.transform, "Panel", new Color(0.05f, 0.02f, 0.04f, 0.97f), Util.Hex("#e63946"), Vector2.zero, new Vector2(860, 400));
+        p.txt = Util.TextoRelleno(panel, "", 40, Color.white, TextAnchor.MiddleCenter, 36);
+        p.Dibujar();
+        Sonido.Efecto("blip", 0.6f, 0.7f);
+        yield return null;
+        while (!p.listo) yield return null;
+        r.valor = p.si;
+        Sonido.Efecto("click", 0.6f, p.si ? 0.8f : 1.2f);
+        Destroy(go);
+    }
+
+    void Dibujar()
+    {
+        string bSi = si ? "<color=#ff4d4d>>  SÍ  <</color>" : "<color=#888888>SÍ</color>";
+        string bNo = !si ? "<color=#7bd389>>  NO  <</color>" : "<color=#888888>NO</color>";
+        txt.text = "<b>" + pregunta + "</b>\n" +
+                   (detalle != "" ? "<size=24><color=#bbbbbb>" + detalle + "</color></size>\n" : "") +
+                   "\n" + bSi + "          " + bNo;
+    }
+
+    void Update()
+    {
+        transform.SetAsLastSibling();
+        if (Entrada.Bajada(Tecla.Izquierda) || Entrada.Bajada(Tecla.Derecha) || Entrada.Bajada(Tecla.Arriba) || Entrada.Bajada(Tecla.Abajo))
+        { si = !si; Sonido.Efecto("click", 0.5f, 1f); Dibujar(); }
+        if (Entrada.Bajada(Tecla.N1)) { si = true; listo = true; }
+        else if (Entrada.Bajada(Tecla.N2) || Entrada.Bajada(Tecla.Saltar)) { si = false; listo = true; }
+        else if (Entrada.Avanzar()) listo = true;
+    }
+
+    // Cierra el juego (en el editor de Unity, detiene el Play)
+    public static void SalirDelJuego()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
     }
 }

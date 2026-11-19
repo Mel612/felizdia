@@ -19,7 +19,8 @@ public class Interactuable : MonoBehaviour
     void OnEnable() { if (!Todos.Contains(this)) Todos.Add(this); }
     void OnDisable() { Todos.Remove(this); }
 
-    public void Usar() { if (alInteractuar != null) alInteractuar(); }
+    public static event Action<Interactuable> AlUsarCualquiera;      // lo escucha el tutorial
+    public void Usar() { if (AlUsarCualquiera != null) AlUsarCualquiera(this); if (alInteractuar != null) alInteractuar(); }
 
     public static Interactuable Crear(Transform padre, Vector2 pos, string accion, Action alInteractuar, float radio)
     {

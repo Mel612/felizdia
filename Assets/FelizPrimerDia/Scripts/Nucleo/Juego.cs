@@ -636,7 +636,8 @@ public class Juego : MonoBehaviour
             "<b>1.  HISTORIA</b>\n<size=26><color=#bbbbbb>Juega a tu ritmo.</color></size>\n\n" +
             "<b>2.  CONTRARRELOJ</b>\n<size=26><color=#bbbbbb>Rompe el bucle lo más rápido posible. El tiempo corre de verdad\n(también mientras hablas y en los minijuegos) y se guarda tu récord.</color></size>\n\n" +
             (rec > 0f ? "<size=26><color=#8ecae6>Récord en " + Dificultad.Nombre + ": " + Dificultad.Formato(rec) + "</color></size>\n\n" : "") +
-            "<size=26>Dificultad: <color=" + Dificultad.ColorHex + ">" + Dificultad.Nombre + "</color></size>",
+            "<size=26>Dificultad: <color=" + Dificultad.ColorHex + ">" + Dificultad.Nombre + "</color>" +
+            "   ·   Retos de las carreras: <color=" + Dificultad.ColorReto + ">" + Dificultad.NombreReto + "</color></size>",
             "Presiona 1 o 2", Util.Hex("#07060b"));
         yield return new WaitForSeconds(0.3f);
         n = 0;

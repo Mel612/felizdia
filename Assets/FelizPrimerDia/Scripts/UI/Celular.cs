@@ -81,7 +81,7 @@ public class Celular : MonoBehaviour
         if (actual.abierto) actual.Dibujar();
     }
 
-    void OnDestroy() { if (actual == this) actual = null; }
+    void OnDestroy() { if (actual == this) actual = null; if (abierto) HayUnoAbierto = false; }
 
     Juego juego;
     RectTransform noti, pantalla;
@@ -188,9 +188,12 @@ public class Celular : MonoBehaviour
         }
     }
 
+    public static bool HayUnoAbierto;
+
     void Abrir()
     {
         abierto = true;
+        HayUnoAbierto = true;
         Dibujar();
         pantalla.gameObject.SetActive(true);
         noti.gameObject.SetActive(false);
@@ -200,6 +203,7 @@ public class Celular : MonoBehaviour
     void Cerrar()
     {
         abierto = false;
+        HayUnoAbierto = false;
         pantalla.gameObject.SetActive(false);
     }
 

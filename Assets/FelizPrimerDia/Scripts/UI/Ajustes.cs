@@ -106,7 +106,7 @@ public class PanelOpciones : MonoBehaviour
             sb.Append(i == sel ? "<color=#ff4d4d>> " : "   ").Append(nombres[i]).Append(i == sel ? "</color>" : "")
               .Append("\n      ").Append(barras[i]).Append("\n\n");
         sb.Append(sel == 4 ? "<color=#ff4d4d>> Volver</color>" : "   Volver");
-        sb.Append("\n\n<size=22><color=#888888>Arriba/abajo: elegir · Izquierda/derecha: cambiar · E: aceptar</color></size>");
+        sb.Append("\n\n<size=22><color=#888888>Arriba/abajo: elegir · Izq./der.: cambiar · E: aceptar · Esc: volver</color></size>");
         txt.text = sb.ToString();
     }
 
@@ -132,9 +132,11 @@ public class PanelOpciones : MonoBehaviour
 
 // Menú de pausa (tecla P):
 //   0 Continuar · 1 Guardar partida · 2 Opciones · 3 Guardar y volver al menú · 4 Volver al menú sin guardar
+//   5 Salir del juego (lo cierra aquí mismo; lo que no guardaste se pierde)
 public class PanelPausa : MonoBehaviour
 {
-    static readonly string[] Ops = { "CONTINUAR", "GUARDAR PARTIDA", "OPCIONES", "GUARDAR Y VOLVER AL MENÚ", "VOLVER AL MENÚ SIN GUARDAR" };
+    static readonly string[] Ops = { "CONTINUAR", "GUARDAR PARTIDA", "OPCIONES", "GUARDAR Y VOLVER AL MENÚ", "VOLVER AL MENÚ SIN GUARDAR", "SALIR DEL JUEGO" };
+    const int OpSalir = 5;
     Text txt;
     int sel;
     bool listo, puedeGuardar;
@@ -161,7 +163,7 @@ public class PanelPausa : MonoBehaviour
         PanelPausa p = go.AddComponent<PanelPausa>();
         p.puedeGuardar = puedeGuardar;
         p.aviso = aviso ?? "";
-        RectTransform panel = Util.PanelArteCentro(go.transform, "Panel", new Color(0.04f, 0.03f, 0.07f, 0.95f), Util.Hex("#e63946"), Vector2.zero, new Vector2(900, 640));
+        RectTransform panel = Util.PanelArteCentro(go.transform, "Panel", new Color(0.04f, 0.03f, 0.07f, 0.95f), Util.Hex("#e63946"), Vector2.zero, new Vector2(900, 780));
         p.txt = Util.TextoRelleno(panel, "", 34, Color.white, TextAnchor.UpperCenter, 36);
         p.Dibujar();
         return p;
@@ -183,7 +185,8 @@ public class PanelPausa : MonoBehaviour
             sb.Append("\n\n");
         }
         if (!puedeGuardar) sb.Append("<size=20><color=#888888>Aquí no se puede guardar (solo en los pisos del edificio).</color></size>\n");
-        if (aviso != "") sb.Append("<size=22><color=#7bd389>").Append(aviso).Append("</color></size>");
+        if (aviso != "") sb.Append("<size=22><color=#7bd389>").Append(aviso).Append("</color></size>\n");
+        sb.Append("<size=20><color=#888888>Flechas: elegir  ·  E: aceptar  ·  Esc o P: continuar</color></size>");
         txt.text = sb.ToString();
     }
 
@@ -200,6 +203,7 @@ public class PanelPausa : MonoBehaviour
         if (Entrada.Bajada(Tecla.Arriba)) Mover(-1);
         if (Entrada.Bajada(Tecla.Abajo)) Mover(1);
         if (Entrada.Bajada(Tecla.Pausa) || Entrada.Bajada(Tecla.Saltar)) { sel = 0; listo = true; }
+        else if (Entrada.Avanzar() && sel == OpSalir) { Sonido.Efecto("blip", 0.6f, 0.8f); Partida.SalirDelJuego(); }
         else if (Entrada.Avanzar()) { Sonido.Efecto("blip", 0.6f, 0.8f); listo = true; }
     }
 }

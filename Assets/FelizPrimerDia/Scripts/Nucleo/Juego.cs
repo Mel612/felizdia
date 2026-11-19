@@ -557,7 +557,7 @@ public class Juego : MonoBehaviour
                 "Presiona E para empezar", Util.Hex("#07060b"), 1);
             yield return new WaitForSeconds(0.4f);
             while (!Entrada.Avanzar()) yield return null;
-            yield return StartCoroutine(ElegirDificultad());
+            yield return StartCoroutine(ElegirDificultad(false));
         }
         else
         {
@@ -605,8 +605,11 @@ public class Juego : MonoBehaviour
     }
 
     // Menú de dificultad y modo (solo al empezar una partida nueva).
-    IEnumerator ElegirDificultad()
+    // puedeVolver: con Esc se regresa a la pantalla de inicio (solo si hay menú de inicio).
+    IEnumerator ElegirDificultad(bool puedeVolver = true)
     {
+        string pieVolver = puedeVolver ? "     ·     Esc: volver al menú" : "";
+
         // Personaje (Mateo aparece cuando ya lo desbloqueaste)
         Protagonista.Actual = Quien.Valeria;
         if (Protagonista.MateoDesbloqueado)
@@ -614,10 +617,15 @@ public class Juego : MonoBehaviour
             ui.MostrarPantalla("PERSONAJE",
                 "<color=#c77dff><b>1.  VALERIA QUISPE</b></color>\n<size=26><color=#bbbbbb>La historia principal. Su primer día... una y otra vez.</color></size>\n\n" +
                 "<color=#4cc9f0><b>2.  MATEO CHOQUE</b></color>  <size=26><color=#ffd166>NIVEL EXTRA</color></size>\n<size=26><color=#bbbbbb>Ing. de Sistemas. Vio todo por las cámaras... y no hizo nada.\nHackea computadoras, recupera los videos y enfrenta al quinto disfraz.</color></size>",
-                "Presiona 1 o 2", Util.Hex("#07060b"));
+                "Presiona 1 o 2" + pieVolver, Util.Hex("#07060b"));
             yield return new WaitForSeconds(0.3f);
             int p = 0;
-            while (p < 1 || p > 2) { p = Entrada.NumeroBajado(); yield return null; }
+            while (p < 1 || p > 2)
+            {
+                if (puedeVolver && Entrada.Bajada(Tecla.Saltar)) { VolverAlMenu(); yield break; }
+                p = Entrada.NumeroBajado();
+                yield return null;
+            }
             Protagonista.Actual = p == 2 ? Quien.Mateo : Quien.Valeria;
         }
 
@@ -629,24 +637,41 @@ public class Juego : MonoBehaviour
               .Append("</b></color>   <size=22><color=").Append(Dificultad.ColoresReto[reto]).Append(">· Retos ").Append(Dificultad.NombresReto[reto])
               .Append("</color></size>\n<size=24><color=#bbbbbb>").Append(Dificultad.Descripciones[i]).Append("</color></size>\n\n");
         }
-        ui.MostrarPantalla("DIFICULTAD", sb.ToString(), "Presiona 1, 2, 3 o 4", Util.Hex("#07060b"));
-        yield return new WaitForSeconds(0.3f);
-        int n = 0;
-        while (n < 1 || n > 4) { n = Entrada.NumeroBajado(); yield return null; }
-        Dificultad.Actual = (Nivel)(n - 1);
+        // Dificultad y modo. Desde el modo de juego, Esc regresa a la dificultad.
+        while (true)
+        {
+            ui.MostrarPantalla("DIFICULTAD", sb.ToString(), "Presiona 1, 2, 3 o 4" + pieVolver, Util.Hex("#07060b"));
+            yield return new WaitForSeconds(0.3f);
+            int n = 0;
+            while (n < 1 || n > 4)
+            {
+                if (puedeVolver && Entrada.Bajada(Tecla.Saltar)) { VolverAlMenu(); yield break; }
+                n = Entrada.NumeroBajado();
+                yield return null;
+            }
+            Dificultad.Actual = (Nivel)(n - 1);
 
-        float rec = Dificultad.Record;
-        ui.MostrarPantalla("MODO DE JUEGO",
-            "<b>1.  HISTORIA</b>\n<size=26><color=#bbbbbb>Juega a tu ritmo.</color></size>\n\n" +
-            "<b>2.  CONTRARRELOJ</b>\n<size=26><color=#bbbbbb>Rompe el bucle lo más rápido posible. El tiempo corre de verdad\n(también mientras hablas y en los minijuegos) y se guarda tu récord.</color></size>\n\n" +
-            (rec > 0f ? "<size=26><color=#8ecae6>Récord en " + Dificultad.Nombre + ": " + Dificultad.Formato(rec) + "</color></size>\n\n" : "") +
-            "<size=26>Dificultad: <color=" + Dificultad.ColorHex + ">" + Dificultad.Nombre + "</color>" +
-            "   ·   Retos de las carreras: <color=" + Dificultad.ColorReto + ">" + Dificultad.NombreReto + "</color></size>",
-            "Presiona 1 o 2", Util.Hex("#07060b"));
-        yield return new WaitForSeconds(0.3f);
-        n = 0;
-        while (n < 1 || n > 2) { n = Entrada.NumeroBajado(); yield return null; }
-        Dificultad.Contrarreloj = n == 2;
+            float rec = Dificultad.Record;
+            ui.MostrarPantalla("MODO DE JUEGO",
+                "<b>1.  HISTORIA</b>\n<size=26><color=#bbbbbb>Juega a tu ritmo.</color></size>\n\n" +
+                "<b>2.  CONTRARRELOJ</b>\n<size=26><color=#bbbbbb>Rompe el bucle lo más rápido posible. El tiempo corre de verdad\n(también mientras hablas y en los minijuegos) y se guarda tu récord.</color></size>\n\n" +
+                (rec > 0f ? "<size=26><color=#8ecae6>Récord en " + Dificultad.Nombre + ": " + Dificultad.Formato(rec) + "</color></size>\n\n" : "") +
+                "<size=26>Dificultad: <color=" + Dificultad.ColorHex + ">" + Dificultad.Nombre + "</color>" +
+                "   ·   Retos de las carreras: <color=" + Dificultad.ColorReto + ">" + Dificultad.NombreReto + "</color></size>",
+                "Presiona 1 o 2     ·     Esc: cambiar la dificultad", Util.Hex("#07060b"));
+            yield return new WaitForSeconds(0.3f);
+            n = 0;
+            bool atras = false;
+            while (n < 1 || n > 2)
+            {
+                if (Entrada.Bajada(Tecla.Saltar)) { atras = true; break; }
+                n = Entrada.NumeroBajado();
+                yield return null;
+            }
+            if (atras) continue;
+            Dificultad.Contrarreloj = n == 2;
+            break;
+        }
         Dificultad.Elegida = true;
         Dificultad.TiempoTotal = 0f;
     }

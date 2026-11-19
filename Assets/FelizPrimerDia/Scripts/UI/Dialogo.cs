@@ -103,8 +103,13 @@ public class Dialogo : MonoBehaviour
 
         if (actual.opciones != null)
         {
+            // Flechas (o joystick) para mover la flecha, E para elegir. Los números siguen sirviendo como atajo.
+            int total = actual.opciones.Length;
+            if (Entrada.Bajada(Tecla.Arriba)) { opcion = (opcion + total - 1) % total; Sonido.Efecto("click", 0.4f, 1.1f); DibujarCuerpo(); }
+            if (Entrada.Bajada(Tecla.Abajo)) { opcion = (opcion + 1) % total; Sonido.Efecto("click", 0.4f, 1.1f); DibujarCuerpo(); }
             int n = Entrada.NumeroBajado();
-            if (n >= 1 && n <= actual.opciones.Length)
+            if (n < 1 && Entrada.Avanzar()) n = opcion + 1;
+            if (n >= 1 && n <= total)
             {
                 Paso p = actual;
                 Sonido.Efecto("click", 0.5f, 1f);
@@ -132,19 +137,32 @@ public class Dialogo : MonoBehaviour
         retrato.transform.parent.gameObject.SetActive(cara != null);
         retrato.sprite = cara;
         txtCuerpo.rectTransform.offsetMin = new Vector2(cara != null ? 206 : 34, 40);
+        opcion = 0;
+        DibujarCuerpo();
+        panel.gameObject.SetActive(true);
+        AjustarAlto();
+        panel.SetAsLastSibling();
+    }
+
+    int opcion;     // opción marcada con la flecha
+
+    void DibujarCuerpo()
+    {
+        Paso p = actual;
+        if (p == null) return;
         string cuerpo = p.texto;
         if (p.opciones != null)
         {
             cuerpo += "\n";
             for (int i = 0; i < p.opciones.Length; i++)
-                cuerpo += "\n<color=#a4161a><b>" + (i + 1) + ")</b></color> " + p.opciones[i];
-            txtPie.text = "Elige con 1-" + p.opciones.Length;
+                cuerpo += i == opcion
+                    ? "\n<color=#c1121f><b>>  " + p.opciones[i] + "</b></color>"
+                    : "\n<color=#7a6a55>    " + p.opciones[i] + "</color>";
+            txtPie.text = "↑ ↓ elegir   ·   E aceptar";
         }
         else txtPie.text = "E / Espacio ►";
         txtCuerpo.text = cuerpo;
-        panel.gameObject.SetActive(true);
-        AjustarAlto();
-        panel.SetAsLastSibling();
+        if (panel.gameObject.activeSelf) AjustarAlto();
     }
 
     // La caja crece con el texto (por ejemplo cuando hay muchas opciones)

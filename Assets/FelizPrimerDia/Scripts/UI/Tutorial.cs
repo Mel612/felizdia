@@ -86,11 +86,14 @@ public class Tutorial : MonoBehaviour
         return Arte.Crear("flecha_tutorial", L, Arte.PivotPies);
     }
 
+    // Texto para teclado o para el celular
+    static string M(string pc, string celular) { return ControlesTactiles.Activos ? celular : pc; }
+
     void Mostrar(string tecla, string texto, int paso)
     {
         txtTecla.text = tecla;
         txtTexto.text = texto;
-        txtPaso.text = paso > 0 ? "Tutorial " + paso + "/6   ·   Esc: saltar" : "Esc: saltar";
+        txtPaso.text = (paso > 0 ? "Tutorial " + paso + "/6   ·   " : "") + M("Esc: saltar", "");
         Sonido.Efecto("blip", 0.5f, 1.3f);
         t = 0f;
     }
@@ -148,12 +151,12 @@ public class Tutorial : MonoBehaviour
         Jugador pj = j.jugador;
 
         // 1. Moverse
-        Mostrar("W A S D  o  FLECHAS", "Muévete por la Planta Baja.", 1);
+        Mostrar(M("W A S D  o  FLECHAS", "JOYSTICK  (izquierda)"), "Muévete por la Planta Baja.", 1);
         Vector2 ini = pj.Posicion;
         yield return Esperar(() => Vector2.Distance(ini, pj.Posicion) > 2.5f);
 
         // 2. Correr
-        Mostrar("mantén  SHIFT", "Corre mientras te mueves. Te va a salvar la vida.", 2);
+        Mostrar(M("mantén  SHIFT", "mantén  CORRER"), "Corre mientras te mueves. Te va a salvar la vida.", 2);
         float corriendo = 0f;
         yield return Esperar(() =>
         {
@@ -164,7 +167,7 @@ public class Tutorial : MonoBehaviour
         // 3. Hablar
         usado = false;
         objetivo = MasCercano("Hablar");
-        Mostrar("acércate y presiona  E", "Habla con alguien. Sigue la flecha amarilla.", 3);
+        Mostrar(M("acércate y presiona  E", "acércate y toca  E"), "Habla con alguien. Sigue la flecha amarilla.", 3);
         float refrescar = 0f;
         yield return Esperar(() =>
         {
@@ -175,20 +178,20 @@ public class Tutorial : MonoBehaviour
         objetivo = null;
 
         // 4. Cuaderno
-        Mostrar("TAB", "Abre tu cuaderno. Lo que descubres aquí NO se borra nunca.", 4);
+        Mostrar(M("TAB", "MENÚ  →  CUADERNO"), "Abre tu cuaderno. Lo que descubres aquí NO se borra nunca.", 4);
         yield return Esperar(() => j.ui.CuadernoAbierto);
-        Mostrar("TAB", "Ciérralo otra vez.", 4);
+        Mostrar(M("TAB", "ATRÁS"), "Ciérralo otra vez.", 4);
         yield return Esperar(() => !j.ui.CuadernoAbierto);
 
         // 5. Mapa
-        Mostrar("Q", "Abre el mapa: ahí ves tus misiones y dónde estás.", 5);
+        Mostrar(M("Q", "MENÚ  →  MAPA"), "Abre el mapa: ahí ves tus misiones y dónde estás.", 5);
         yield return Esperar(() => MiniMapa.HayUnoAbierto);
-        Mostrar("Q", "Las salas en AMARILLO son tus misiones. Cierra el mapa.", 5);
+        Mostrar(M("Q", "ATRÁS"), "Las salas en AMARILLO son tus misiones. Cierra el mapa.", 5);
         yield return Esperar(() => !MiniMapa.HayUnoAbierto);
 
         // 6. Esconderse
         objetivo = MasCercano("Esconderte");
-        Mostrar("acércate al casillero y presiona  E", "Escóndete. ¡Rápido!", 6);
+        Mostrar(M("acércate al casillero y presiona  E", "acércate al casillero y toca  E"), "Escóndete. ¡Rápido!", 6);
         yield return Esperar(() => { if (objetivo == null) objetivo = MasCercano("Esconderte"); return pj.Escondido; });
         objetivo = null;
         if (saltar) yield break;
@@ -202,9 +205,9 @@ public class Tutorial : MonoBehaviour
         Mostrar("<color=#ff4d4d>EL PEPINO</color>", "Si te atrapa, mueres y el día vuelve a empezar a las 6:45.\nPierdes los sellos, pero no lo que aprendiste.", 0);
         float h2 = 0f;
         while (h2 < 2f && !saltar) { h2 += Time.unscaledDeltaTime; yield return null; }
-        txtPaso.text = "E: continuar";
+        txtPaso.text = M("E: continuar", "toca E para continuar");
         while (!Entrada.Avanzar() && !saltar) yield return null;
-        if (pj.Escondido) Mostrar("E", "Sal del casillero cuando quieras.", 0);
+        if (pj.Escondido) Mostrar(M("E", "toca  E"), "Sal del casillero cuando quieras.", 0);
         while (pj.Escondido && !saltar) yield return null;
     }
 

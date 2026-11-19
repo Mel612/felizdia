@@ -617,48 +617,63 @@ public class Juego : MonoBehaviour
     }
 
     // Menú de dificultad y modo (solo al empezar una partida nueva).
+    // Pantalla para elegir una opción: flechas (o joystick) mueven la flecha, E acepta. Los números sirven de atajo.
+    IEnumerator ElegirEnPantalla(string titulo, string[] opciones, string extra, Resultado<int> r)
+    {
+        int sel = 0, n = 0;
+        System.Action dibujar = delegate
+        {
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            for (int i = 0; i < opciones.Length; i++)
+                sb.Append(i == sel ? "<color=#ff4d4d><b>>></b></color>  " : "").Append(opciones[i]).Append(i == sel ? "  <color=#ff4d4d><b><<</b></color>" : "").Append("\n\n");
+            sb.Append(extra);
+            ui.MostrarPantalla(titulo, sb.ToString(), "↑ ↓ elegir   ·   E aceptar", Util.Hex("#07060b"));
+        };
+        dibujar();
+        yield return new WaitForSeconds(0.3f);
+        while (n < 1 || n > opciones.Length)
+        {
+            if (Entrada.Bajada(Tecla.Arriba)) { sel = (sel + opciones.Length - 1) % opciones.Length; Sonido.Efecto("click", 0.5f, 1.1f); dibujar(); }
+            if (Entrada.Bajada(Tecla.Abajo)) { sel = (sel + 1) % opciones.Length; Sonido.Efecto("click", 0.5f, 1.1f); dibujar(); }
+            n = Entrada.NumeroBajado();
+            if (n < 1 && Entrada.Avanzar()) n = sel + 1;
+            yield return null;
+        }
+        Sonido.Efecto("blip", 0.6f, 0.8f);
+        r.valor = n;
+    }
+
     IEnumerator ElegirDificultad()
     {
+        Resultado<int> r = new Resultado<int>();
+
         // Personaje (Mateo aparece cuando ya lo desbloqueaste)
         Protagonista.Actual = Quien.Valeria;
         if (Protagonista.MateoDesbloqueado)
         {
-            ui.MostrarPantalla("PERSONAJE",
-                "<color=#c77dff><b>1.  VALERIA QUISPE</b></color>\n<size=26><color=#bbbbbb>La historia principal. Su primer día... una y otra vez.</color></size>\n\n" +
-                "<color=#4cc9f0><b>2.  MATEO CHOQUE</b></color>  <size=26><color=#ffd166>NIVEL EXTRA</color></size>\n<size=26><color=#bbbbbb>Ing. de Sistemas. Vio todo por las cámaras... y no hizo nada.\nHackea computadoras, recupera los videos y enfrenta al quinto disfraz.</color></size>",
-                "Presiona 1 o 2", Util.Hex("#07060b"));
-            yield return new WaitForSeconds(0.3f);
-            int p = 0;
-            while (p < 1 || p > 2) { p = Entrada.NumeroBajado(); yield return null; }
-            Protagonista.Actual = p == 2 ? Quien.Mateo : Quien.Valeria;
+            yield return StartCoroutine(ElegirEnPantalla("PERSONAJE", new[] {
+                "<color=#c77dff><b>VALERIA QUISPE</b></color>\n<size=26><color=#bbbbbb>La historia principal. Su primer día... una y otra vez.</color></size>",
+                "<color=#4cc9f0><b>MATEO CHOQUE</b></color>  <size=26><color=#ffd166>NIVEL EXTRA</color></size>\n<size=26><color=#bbbbbb>Ing. de Sistemas. Vio todo por las cámaras... y no hizo nada.\nHackea computadoras, recupera los videos y enfrenta al quinto disfraz.</color></size>" },
+                "", r));
+            Protagonista.Actual = r.valor == 2 ? Quien.Mateo : Quien.Valeria;
         }
 
-        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        string[] dif = new string[4];
         for (int i = 0; i < 4; i++)
-        {
-            int reto = (int)Dificultad.RetoDe((Nivel)i);
-            sb.Append("<color=").Append(Dificultad.Colores[i]).Append("><b>").Append(i + 1).Append(".  ").Append(Dificultad.Nombres[i])
-              .Append("</b></color>   <size=22><color=").Append(Dificultad.ColoresReto[reto]).Append(">· Retos ").Append(Dificultad.NombresReto[reto])
-              .Append("</color></size>\n<size=24><color=#bbbbbb>").Append(Dificultad.Descripciones[i]).Append("</color></size>\n\n");
-        }
-        ui.MostrarPantalla("DIFICULTAD", sb.ToString(), "Presiona 1, 2, 3 o 4", Util.Hex("#07060b"));
-        yield return new WaitForSeconds(0.3f);
-        int n = 0;
-        while (n < 1 || n > 4) { n = Entrada.NumeroBajado(); yield return null; }
-        Dificultad.Actual = (Nivel)(n - 1);
+            dif[i] = "<color=" + Dificultad.Colores[i] + "><b>" + Dificultad.Nombres[i] + "</b></color>  <size=22><color=" +
+                     Dificultad.ColoresReto[(int)Dificultad.RetoDe((Nivel)i)] + ">· retos " + Dificultad.NombresReto[(int)Dificultad.RetoDe((Nivel)i)] +
+                     "</color></size>\n<size=24><color=#bbbbbb>" + Dificultad.Descripciones[i] + "</color></size>";
+        yield return StartCoroutine(ElegirEnPantalla("DIFICULTAD", dif, "", r));
+        Dificultad.Actual = (Nivel)(r.valor - 1);
 
         float rec = Dificultad.Record;
-        ui.MostrarPantalla("MODO DE JUEGO",
-            "<b>1.  HISTORIA</b>\n<size=26><color=#bbbbbb>Juega a tu ritmo.</color></size>\n\n" +
-            "<b>2.  CONTRARRELOJ</b>\n<size=26><color=#bbbbbb>Rompe el bucle lo más rápido posible. El tiempo corre de verdad\n(también mientras hablas y en los minijuegos) y se guarda tu récord.</color></size>\n\n" +
+        yield return StartCoroutine(ElegirEnPantalla("MODO DE JUEGO", new[] {
+            "<b>HISTORIA</b>\n<size=26><color=#bbbbbb>Juega a tu ritmo.</color></size>",
+            "<b>CONTRARRELOJ</b>\n<size=26><color=#bbbbbb>Rompe el bucle lo más rápido posible. El tiempo corre de verdad\n(también mientras hablas y en los minijuegos) y se guarda tu récord.</color></size>" },
             (rec > 0f ? "<size=26><color=#8ecae6>Récord en " + Dificultad.Nombre + ": " + Dificultad.Formato(rec) + "</color></size>\n\n" : "") +
-            "<size=26>Dificultad: <color=" + Dificultad.ColorHex + ">" + Dificultad.Nombre + "</color>" +
-            "   ·   Retos de las carreras: <color=" + Dificultad.ColorReto + ">" + Dificultad.NombreReto + "</color></size>",
-            "Presiona 1 o 2", Util.Hex("#07060b"));
-        yield return new WaitForSeconds(0.3f);
-        n = 0;
-        while (n < 1 || n > 2) { n = Entrada.NumeroBajado(); yield return null; }
-        Dificultad.Contrarreloj = n == 2;
+            "<size=26>Dificultad: <color=" + Dificultad.ColorHex + ">" + Dificultad.Nombre + "</color>   ·   Retos: <color=" + Dificultad.ColorReto + ">" + Dificultad.NombreReto + "</color></size>",
+            r));
+        Dificultad.Contrarreloj = r.valor == 2;
         Dificultad.Elegida = true;
         Dificultad.TiempoTotal = 0f;
     }
@@ -720,7 +735,17 @@ public class Juego : MonoBehaviour
                 if (r.valor == 3) { salir = true; break; }
                 continue;
             }
-            if (r.valor == 4) salir = true;
+            if (r.valor == 4 || r.valor == 5)
+            {
+                // ¿Seguro? (lo que no guardaste se pierde)
+                Resultado<bool> ok = new Resultado<bool>();
+                yield return StartCoroutine(PanelConfirmar.Preguntar(ui.transform,
+                    r.valor == 4 ? "¿Volver al menú sin guardar?" : "¿Seguro que quieres salir del juego?",
+                    "Lo que no guardaste se pierde.", ok));
+                if (!ok.valor) continue;
+                if (r.valor == 5) { Time.timeScale = 1f; PanelConfirmar.SalirDelJuego(); yield break; }
+                salir = true;
+            }
             break;
         }
         Time.timeScale = escalaAntes <= 0f ? 1f : escalaAntes;

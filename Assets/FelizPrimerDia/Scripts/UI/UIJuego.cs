@@ -82,8 +82,11 @@ public class UIJuego : MonoBehaviour
         txtPiso = Util.TextoUI(cajaHora, "", 24, Util.Hex("#cfcfcf"), TextAnchor.LowerLeft, cero, uno, new Vector2(16, 12), new Vector2(-12, -12));
 
         // Pasaporte (arriba derecha)
-        RectTransform cajaPas = Util.PanelArte(t, "Pasaporte", hudFondo, hudBorde, new Vector2(1, 1), new Vector2(1, 1), new Vector2(-470, -345), new Vector2(-20, -20));
-        txtPasaporte = Util.TextoRelleno(cajaPas, "", 20, Color.white, TextAnchor.UpperLeft, 12);
+        // En el celular el pasaporte es más chico (el detalle está en el Inventario y el Mapa)
+        bool movil = ControlesTactiles.Activos;
+        RectTransform cajaPas = Util.PanelArte(t, "Pasaporte", hudFondo, hudBorde, new Vector2(1, 1), new Vector2(1, 1),
+                                               movil ? new Vector2(-400, -290) : new Vector2(-470, -345), new Vector2(-20, -20));
+        txtPasaporte = Util.TextoRelleno(cajaPas, "", movil ? 17 : 20, Color.white, TextAnchor.UpperLeft, movil ? 10 : 12);
 
         // Prompt de interacción (abajo centro)
         txtPrompt = Util.TextoUI(t, "", 32, Util.Hex("#ffe8a3"), TextAnchor.MiddleCenter, new Vector2(0.5f, 0), new Vector2(0.5f, 0), new Vector2(-600, 250), new Vector2(600, 310));
@@ -241,6 +244,7 @@ public class UIJuego : MonoBehaviour
             if (cuadernoAbierto) CerrarCuaderno();
             else if (!j.Bloqueado) AbrirCuaderno();
         }
+        else if (cuadernoAbierto && Entrada.Bajada(Tecla.Saltar)) CerrarCuaderno();     // Esc / ATRÁS también lo cierra
     }
 
     // ---------- Pasaporte de Mateo ----------
@@ -372,7 +376,7 @@ public class UIJuego : MonoBehaviour
         {
             txtHora.transform.parent.gameObject.SetActive(hudVisible);
             txtPasaporte.transform.parent.gameObject.SetActive(hudVisible);
-            txtAyuda.enabled = hudVisible;
+            txtAyuda.enabled = hudVisible && !ControlesTactiles.Activos;    // en el celular no hay teclado
             if (hudVisible && Juego.I != null && Juego.I.tipoEscena == TipoEscena.Piso)
             {
                 string ayuda = "[Q] Mapa   [I] Inventario   [C] Celular   [X] Flash " + Mathf.FloorToInt(Partida.Bateria) + "%   " +

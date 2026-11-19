@@ -56,13 +56,24 @@ public class MJPreguntas : Minijuego
     {
         Ronda r = rondas[ronda];
         txtEnunciado.text = r.enunciado;
-        string ops = "";
-        for (int i = 0; i < r.opciones.Length; i++)
-            ops += "<color=#ffd166>" + (i + 1) + ")</color>  " + r.opciones[i] + "\n";
-        txtOpciones.text = ops;
+        sel = 0;
+        DibujarOpciones();
         txtEstado.text = (rondas.Count > 1 ? etiquetaRonda + " " + (ronda + 1) + "/" + rondas.Count + "     " : "") +
                          "Errores: " + errores + "/" + maxErrores;
         tRonda = 0f;
+    }
+
+    int sel;    // opción marcada con la flecha
+
+    void DibujarOpciones()
+    {
+        Ronda r = rondas[ronda];
+        string ops = "";
+        for (int i = 0; i < r.opciones.Length; i++)
+            ops += i == sel
+                ? "<color=#ff4d4d><b>>  " + r.opciones[i] + "</b></color>\n"
+                : "<color=#888888>" + (i + 1) + ")</color>  " + r.opciones[i] + "\n";
+        txtOpciones.text = ops + "\n<size=22><color=#888888>↑ ↓ elegir  ·  E aceptar</color></size>";
     }
 
     protected override void Tick(float dt)
@@ -75,7 +86,10 @@ public class MJPreguntas : Minijuego
             if (tRonda >= tiempoPorRonda) { Error("¡Se acabó el tiempo!"); return; }
         }
 
+        if (Entrada.Bajada(Tecla.Arriba)) { sel = (sel + r.opciones.Length - 1) % r.opciones.Length; Sonido.Efecto("click", 0.4f, 1.1f); DibujarOpciones(); }
+        if (Entrada.Bajada(Tecla.Abajo)) { sel = (sel + 1) % r.opciones.Length; Sonido.Efecto("click", 0.4f, 1.1f); DibujarOpciones(); }
         int n = Entrada.NumeroBajado();
+        if (n < 1 && Entrada.Avanzar()) n = sel + 1;
         if (n < 1 || n > r.opciones.Length) return;
 
         if (n - 1 == r.correcta)

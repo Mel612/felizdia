@@ -19,6 +19,7 @@ public class MJOrdenar : Minijuego
     readonly List<int> restantes = new List<int>();
     readonly List<int> colocados = new List<int>();
     int errores;
+    int sel;    // paso marcado con la flecha
     Text txtIzq, txtDer, txtPista, txtFeedback;
     Barra barraTiempo;
 
@@ -52,8 +53,12 @@ public class MJOrdenar : Minijuego
     void Dibujar()
     {
         string izq = "";
+        if (sel >= restantes.Count) sel = Mathf.Max(0, restantes.Count - 1);
         for (int i = 0; i < restantes.Count; i++)
-            izq += "<color=#ffd166>" + (i + 1) + ")</color> " + Elemento(restantes[i]) + "\n\n";
+            izq += i == sel
+                ? "<color=#ff4d4d><b>></b></color> <b>" + Elemento(restantes[i]) + "</b>\n\n"
+                : "<color=#888888>" + (i + 1) + ")</color> " + Elemento(restantes[i]) + "\n\n";
+        if (restantes.Count > 0) izq += "<size=22><color=#888888>↑ ↓ elegir  ·  E colocar</color></size>";
         txtIzq.text = izq;
         string der = "";
         for (int i = 0; i < colocados.Count; i++)
@@ -70,7 +75,13 @@ public class MJOrdenar : Minijuego
             if (tiempo >= tiempoLimite) { Terminar(false, "¡SE ACABÓ EL TIEMPO!"); return; }
         }
 
+        if (restantes.Count > 0)
+        {
+            if (Entrada.Bajada(Tecla.Arriba)) { sel = (sel + restantes.Count - 1) % restantes.Count; Sonido.Efecto("click", 0.4f, 1.1f); Dibujar(); }
+            if (Entrada.Bajada(Tecla.Abajo)) { sel = (sel + 1) % restantes.Count; Sonido.Efecto("click", 0.4f, 1.1f); Dibujar(); }
+        }
         int n = Entrada.NumeroBajado();
+        if (n < 1 && Entrada.Avanzar()) n = sel + 1;
         if (n < 1 || n > restantes.Count) return;
 
         int elegido = restantes[n - 1];

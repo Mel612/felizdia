@@ -14,7 +14,7 @@ using UnityEngine.InputSystem.Controls;
 //   Izquierda: JOYSTICK (moverse, y en los menús arriba/abajo/izquierda/derecha)
 //   Derecha:   E (usar / aceptar) · CORRER · SALTAR
 //   Arriba:    MAPA · CEL · FLASH · BOTELLA · CUADERNO · PAUSA · ATRÁS
-//   Centro:    1 2 3 4 (aparecen cuando hay que elegir una opción)
+//   Centro:    1-6 (solo para las cámaras del cuarto secreto y los videos del cuaderno)
 //
 //  Cada botón "aprieta" una tecla del juego: el resto del código no cambia.
 // =====================================================================
@@ -193,10 +193,11 @@ public class ControlesTactiles : MonoBehaviour
         bool persecucion = j != null && j.tipoEscena == TipoEscena.Persecucion;
 
         // ¿Hay que elegir una opción? Muestra los números que sirven
+        // (las opciones de diálogos, menús y minijuegos se eligen con el joystick + E;
+        //  los números solo hacen falta para las cámaras del cuarto secreto y los videos del cuaderno)
         int n = 0;
-        if (j != null && j.dialogo != null) n = j.dialogo.OpcionesEnPantalla;
-        if (n == 0 && j != null && j.tipoEscena == TipoEscena.Cuarto) n = 6;
-        if (n == 0 && Minijuego.Actual != null && Minijuego.Actual.UsaNumeros) n = 4;   // minijuegos de preguntas
+        if (j != null && j.tipoEscena == TipoEscena.Cuarto) n = 6;
+        else if (ui.CuadernoAbierto) n = 5;
         foreach (Boton b in botones)
         {
             bool ver = b.numero > 0 ? b.numero <= n : (!b.soloJugando || jugando || (persecucion && b.tecla == Tecla.Correr));

@@ -34,6 +34,8 @@ public class Juego : MonoBehaviour
     [Header("Cinemáticas y sonido")]
     [Tooltip("Pantalla de inicio animada y cinemática de llegada (si lo desactivas, sale la pantalla de texto)")]
     public bool usarMenuInicio = true;
+    [Tooltip("Muestra los controles táctiles en la PC (se usan con el mouse) para probarlos sin celular.")]
+    public bool forzarControlesTactiles = false;
     // El volumen y el brillo se cambian en el juego: menú OPCIONES o tecla P (se guardan solos).
 
     [Header("Pruebas rápidas (solo para desarrollo)")]
@@ -49,7 +51,8 @@ public class Juego : MonoBehaviour
     [HideInInspector] public EscenaBienvenida bienvenida;
 
     public float Hora { get; private set; }
-    public void FijarHora(float h) { Hora = h; }      // para las vistas previas del editor
+    public void FijarHora(float h) { Hora = h; }
+    public bool RelojDetenido;                        // el tutorial detiene el reloj      // para las vistas previas del editor
 
     // Hora en que aparece el Pepino: cada día que mueres aparece un poco más temprano.
     public float HoraPepino
@@ -81,6 +84,7 @@ public class Juego : MonoBehaviour
     void Awake()
     {
         I = this;
+        ControlesTactiles.Forzar = forzarControlesTactiles;
         Application.targetFrameRate = 60;
     }
 
@@ -119,7 +123,12 @@ public class Juego : MonoBehaviour
         Ajustes.Aplicar();                  // volumen y brillo guardados
 
         ConstruirContenido(Raiz, false);
-        if (tipoEscena == TipoEscena.Piso) MiniMapa.Crear(this);   // mapita con tus misiones
+        if (tipoEscena == TipoEscena.Piso)
+        {
+            MiniMapa.Crear(this);     // mapa (Q) con tus misiones
+            Celular.Crear(this);      // mensajes del grupo de la promo (C)
+            Inventario.Crear(this);   // inventario (I)
+        }
 
         if (Horno.HayEscenaDibujada && Horno.Faltantes > 0)
             Debug.LogWarning("[Feliz Primer Día] " + Horno.Faltantes + " objetos no se encontraron en la escena dibujada (se crearon por código). " +
@@ -156,6 +165,8 @@ public class Juego : MonoBehaviour
             jugador = Jugador.Crear(raiz, PuntoDeLlegada());
             Historia.Construir(this);
             Guardado.Montar(raiz, piso);        // máquina de escribir para guardar la partida
+            if (!horneando) Distracciones.Montar(raiz, piso);   // botellas para distraer al Pepino
+            if (!horneando) Sustos.Montar(raiz, this, piso);    // sustos al azar, mensajes en las paredes, espejo
             // La entrada de la Unifranz (de noche para el menú y de día para la llegada)
             if (piso == 0 && horneando)
             {
@@ -366,7 +377,7 @@ public class Juego : MonoBehaviour
             }
         }
 
-        if (!Bloqueado && tipoEscena != TipoEscena.Cuarto && tipoEscena != TipoEscena.Galeria && tipoEscena != TipoEscena.Menu && tipoEscena != TipoEscena.Pantallas)
+        if (!Bloqueado && !RelojDetenido && tipoEscena != TipoEscena.Cuarto && tipoEscena != TipoEscena.Galeria && tipoEscena != TipoEscena.Menu && tipoEscena != TipoEscena.Pantallas)
         {
             float horasPorSegundo = (horaFin - horaInicio) / (minutosRealesPorDia * 60f);
             Hora += horasPorSegundo * Time.deltaTime;
@@ -446,7 +457,7 @@ public class Juego : MonoBehaviour
         if (tipoEscena == TipoEscena.Persecucion) return;           // la persecución pone su música
         if (Bloqueado && Sonido.TemaActual == "m_persecucion") return;
         string tema;
-        if (tipoEscena == TipoEscena.Bienvenida) tema = "m_fiesta";
+        if (tipoEscena == TipoEscena.Bienvenida) tema = "m_morenada";
         else if (Pepino.Cazando > 0) tema = "m_tension";
         else if (Hora >= 17f || sinLuz) tema = "m_noche";
         else tema = "m_campus";
@@ -579,6 +590,7 @@ public class Juego : MonoBehaviour
         string inicio = Protagonista.EsMateo
             ? "Recupera los 4 videos en las computadoras y consigue aliados. A las 18:00: la cabina del auditorio."
             : "Estás en el Ingreso. Habla con la gente (E). El auditorio abre a las 18:00.";
+        if (Tutorial.Toca(this)) { StartCoroutine(Tutorial.Jugar(this)); yield break; }
         ui.Toast(evento != "" ? evento : inicio, 6f);
     }
 

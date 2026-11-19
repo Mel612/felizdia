@@ -19,13 +19,18 @@ public enum Tecla
     Silencio,      // M (sonido)
     Saltar,        // Esc (saltar cinemática)
     Pausa,         // P (pausa: opciones, volver al menú)
-    Mapa           // Q (mapa grande)
+    Mapa,          // Q (mapa grande)
+    Lanzar,        // F (lanzar un objeto para distraer al Pepino)
+    Celular,       // C (celular de Valeria)
+    Flash,         // X (flash de la cámara del celular)
+    Inventario     // I (inventario)
 }
 
 public static class Entrada
 {
-    public static bool Presionada(Tecla t) { return Revisar(t, false); }
-    public static bool Bajada(Tecla t) { return Revisar(t, true); }
+    // Teclado + controles táctiles del celular (ver ControlesTactiles.cs)
+    public static bool Presionada(Tecla t) { return Revisar(t, false) || Tactil.Revisar(t, false); }
+    public static bool Bajada(Tecla t) { return Revisar(t, true) || Tactil.Revisar(t, true); }
 
     public static Vector2 Movimiento()
     {
@@ -35,6 +40,7 @@ public static class Entrada
         if (Presionada(Tecla.Arriba)) y += 1f;
         if (Presionada(Tecla.Abajo)) y -= 1f;
         Vector2 v = new Vector2(x, y);
+        if (Tactil.Joystick.sqrMagnitude > 0.04f) v = Tactil.Joystick;     // el joystick da movimiento suave
         return v.sqrMagnitude > 1f ? v.normalized : v;
     }
 
@@ -98,6 +104,10 @@ public static class Entrada
             case Tecla.Saltar: return B(k.escapeKey, bajada);
             case Tecla.Pausa: return B(k.pKey, bajada);
             case Tecla.Mapa: return B(k.qKey, bajada);
+            case Tecla.Lanzar: return B(k.fKey, bajada);
+            case Tecla.Celular: return B(k.cKey, bajada);
+            case Tecla.Flash: return B(k.xKey, bajada);
+            case Tecla.Inventario: return B(k.iKey, bajada);
         }
         return false;
     }
@@ -131,6 +141,10 @@ public static class Entrada
             case Tecla.Saltar: return K(KeyCode.Escape, bajada);
             case Tecla.Pausa: return K(KeyCode.P, bajada);
             case Tecla.Mapa: return K(KeyCode.Q, bajada);
+            case Tecla.Lanzar: return K(KeyCode.F, bajada);
+            case Tecla.Celular: return K(KeyCode.C, bajada);
+            case Tecla.Flash: return K(KeyCode.X, bajada);
+            case Tecla.Inventario: return K(KeyCode.I, bajada);
         }
         return false;
     }

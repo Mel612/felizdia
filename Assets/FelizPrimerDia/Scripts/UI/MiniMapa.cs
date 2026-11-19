@@ -35,6 +35,7 @@ public class MiniMapa : MonoBehaviour
     static readonly Color ColPasillo = new Color(0.32f, 0.45f, 0.6f, 1f);
 
     public bool Abierto { get { return abierto; } }
+    public static bool HayUnoAbierto;
 
     public static MiniMapa Crear(Juego j)
     {
@@ -105,6 +106,7 @@ public class MiniMapa : MonoBehaviour
     void Abrir()
     {
         abierto = true;
+        HayUnoAbierto = true;
         pisoVisto = juego.piso;
         escalaAntes = Time.timeScale > 0f ? Time.timeScale : 1f;
         Time.timeScale = 0f;
@@ -117,6 +119,7 @@ public class MiniMapa : MonoBehaviour
     void Cerrar()
     {
         abierto = false;
+        HayUnoAbierto = false;
         Time.timeScale = escalaAntes;
         juego.Desbloquear(this);
         pantalla.gameObject.SetActive(false);

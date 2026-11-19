@@ -81,6 +81,9 @@ public class Dialogo : MonoBehaviour
         while (!listo) yield return null;
     }
 
+    // Para los botones 1-2-3-4 del celular
+    public int OpcionesEnPantalla { get { return actual != null && actual.opciones != null ? actual.opciones.Length : 0; } }
+
     public IEnumerator ElegirCo(string quien, string pregunta, string[] opciones, Resultado<int> resultado)
     {
         bool listo = false;

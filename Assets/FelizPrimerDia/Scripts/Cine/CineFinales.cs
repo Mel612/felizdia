@@ -310,7 +310,7 @@ public static class CineFinales
     // =================================================================
     static IEnumerator Malo(Cine c)
     {
-        Sonido.Musica("m_fiesta", 0.5f);
+        Sonido.Musica("m_morenada", 0.5f);
         Sonido.BajarMusica(0.35f);
         Auditorio(c, false);
         SpriteRenderer val = Pj(Arte.Valeria(), -2f, false);

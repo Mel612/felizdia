@@ -417,6 +417,8 @@ public partial class Historia : MonoBehaviour
         go.AddComponent<T>().Iniciar(s);
     }
 
+    public static string UltimoCasillero;     // para que el tutorial no le enseñe un casillero al Pepino
+
     void CrearCasillero(Transform t, Vector2 pos)
     {
         Util.Objeto("Casillero", t, Arte.Casillero(), pos + new Vector2(0f, -0.85f));
@@ -429,6 +431,7 @@ public partial class Historia : MonoBehaviour
             if (J.Escondido) { J.Esconder(false); return; }
             J.Teletransportar(pos);
             J.Esconder(true);
+            UltimoCasillero = clave;
             // El Pepino aprende: recuerda los casilleros que usaste en OTROS días
             bool conocido = Dificultad.Escalada > 0f && Memoria.Sabe(clave) && !Memoria.Tiene(clave);
             Memoria.Aprender(clave);

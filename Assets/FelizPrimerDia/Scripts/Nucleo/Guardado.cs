@@ -39,6 +39,8 @@ public static class Guardado
         public int simulacroEstado;
         public float simulacroLimite;
         public bool vistaHoy;
+        public int lanzables;
+        public float bateria = 100f;
     }
 
     static string Ruta(int espacio)
@@ -117,6 +119,8 @@ public static class Guardado
         d.simulacroEstado = Partida.SimulacroEstado;
         d.simulacroLimite = Partida.SimulacroLimite;
         d.vistaHoy = Partida.VistaHoy;
+        d.lanzables = Partida.Lanzables;
+        d.bateria = Partida.Bateria;
         try
         {
             File.WriteAllText(Ruta(espacio), JsonUtility.ToJson(d, true));
@@ -148,6 +152,9 @@ public static class Guardado
         Partida.SimulacroEstado = d.simulacroEstado;
         Partida.SimulacroLimite = d.simulacroLimite;
         Partida.VistaHoy = d.vistaHoy;
+        Partida.Lanzables = d.lanzables;
+        Partida.Bateria = d.bateria;
+        Celular.NuevoDia();
         Partida.PepinoAturdido = false;
         Partida.IntroPendiente = false;
         Partida.CuartoDesdeMenu = false;

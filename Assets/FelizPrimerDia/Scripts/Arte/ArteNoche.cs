@@ -204,4 +204,43 @@ public static partial class Arte
         L.Borde(Col.H("#0b0a0e"));
         return Crear("maquina_escribir", L, PivotPies);
     }
+
+    // Botella vacía (para lanzar y distraer al Pepino)
+    public static Sprite Botella()
+    {
+        Sprite s;
+        if (EnCache("botella", out s)) return s;
+        Lienzo L = new Lienzo(7, 13);
+        Color v = Col.H("#3f8f5a"), vc = Col.H("#7fd39a"), o = Col.H("#1d4a2c");
+        L.R(1, 0, 5, 8, v); L.R(2, 9, 4, 10, v); L.R(2, 11, 4, 12, Col.H("#c9a227"));
+        L.R(2, 2, 2, 7, vc); L.R(1, 3, 5, 5, Col.H("#f1ead2")); L.R(2, 4, 4, 4, Col.H("#a4161a"));
+        L.Borde(o);
+        return Crear("botella", L, PivotCentro);
+    }
+
+    // Vidrios rotos en el piso
+    public static Sprite Vidrios()
+    {
+        Sprite s;
+        if (EnCache("vidrios", out s)) return s;
+        Lienzo L = new Lienzo(16, 8);
+        Color a = Col.H("#7fd39a"), b = Col.H("#3f8f5a"), c = Col.H("#e9fff1");
+        int[,] p = { { 2, 2 }, { 4, 5 }, { 7, 1 }, { 9, 4 }, { 12, 2 }, { 13, 6 }, { 5, 3 }, { 10, 6 }, { 1, 5 }, { 14, 3 } };
+        for (int i = 0; i < p.GetLength(0); i++)
+        {
+            L.P(p[i, 0], p[i, 1], i % 3 == 0 ? c : (i % 2 == 0 ? a : b));
+            L.P(p[i, 0] + 1, p[i, 1], b);
+        }
+        return Crear("vidrios", L, PivotCentro);
+    }
+
+    // Círculo blanco suave para los botones táctiles
+    public static Sprite CirculoUI()
+    {
+        Sprite s;
+        if (EnCache("circulo_ui", out s)) return s;
+        Lienzo L = new Lienzo(64, 64);
+        L.Circulo(31.5f, 31.5f, 31f, Color.white);
+        return Crear("circulo_ui", L, PivotCentro);
+    }
 }

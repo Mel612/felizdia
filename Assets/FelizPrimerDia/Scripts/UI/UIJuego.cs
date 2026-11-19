@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Text;
 using UnityEngine;
 using UnityEngine.UI;
@@ -31,6 +32,7 @@ public class UIJuego : MonoBehaviour
     RectTransform cuaderno;
     Text cuadernoTexto;
     bool cuadernoAbierto;
+    public bool CuadernoAbierto { get { return cuadernoAbierto; } }
 
     float toastHasta;
     float oscuridadObjetivo, oscuridadActual;
@@ -51,6 +53,7 @@ public class UIJuego : MonoBehaviour
         ui.canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         ui.canvas.sortingOrder = 100;
         CanvasScaler cs = go.AddComponent<CanvasScaler>();
+        if (ControlesTactiles.Activos) ControlesTactiles.Crear(ui);
         ui.escalador = cs;
         cs.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
         cs.referenceResolution = new Vector2(1920, 1080);
@@ -92,7 +95,7 @@ public class UIJuego : MonoBehaviour
         Outline o2 = txtToast.gameObject.AddComponent<Outline>();
         o2.effectColor = Color.black;
 
-        txtAyuda = Util.TextoUI(t, "[Q] Mapa     [Tab] Cuaderno     [P] Menú / guardar", 22, new Color(1, 1, 1, 0.6f), TextAnchor.LowerLeft, cero, cero, new Vector2(20, 16), new Vector2(800, 50));
+        txtAyuda = Util.TextoUI(t, "[Q] Mapa   [C] Celular   [X] Flash   [Tab] Cuaderno   [P] Menú", 22, new Color(1, 1, 1, 0.6f), TextAnchor.LowerLeft, cero, cero, new Vector2(20, 16), new Vector2(1200, 50));
 
         // Aviso de logro (abajo derecha)
         cajaLogro = Util.PanelArte(t, "Logro", new Color(0.08f, 0.06f, 0.02f, 0.92f), Util.Hex("#ffd166"), new Vector2(1, 0), new Vector2(1, 0), new Vector2(-560, 20), new Vector2(-20, 130));
@@ -369,6 +372,12 @@ public class UIJuego : MonoBehaviour
             txtHora.transform.parent.gameObject.SetActive(hudVisible);
             txtPasaporte.transform.parent.gameObject.SetActive(hudVisible);
             txtAyuda.enabled = hudVisible;
+            if (hudVisible && Juego.I != null && Juego.I.tipoEscena == TipoEscena.Piso)
+            {
+                string ayuda = "[Q] Mapa   [I] Inventario   [C] Celular   [X] Flash " + Mathf.FloorToInt(Partida.Bateria) + "%   " +
+                               (Partida.Lanzables > 0 ? "[F] Lanzar botella (" + Partida.Lanzables + ")   " : "") + "[Tab] Cuaderno   [P] Menú";
+                if (txtAyuda.text != ayuda) txtAyuda.text = ayuda;
+            }
         }
 
         telonActual = Mathf.MoveTowards(telonActual, telonObjetivo, Time.deltaTime * velTelon);
@@ -400,6 +409,56 @@ public class UIJuego : MonoBehaviour
     }
 
     public void Toast(string texto) { Toast(texto, 3.5f); }
+
+    // ---------- Sello gigante que cae en la pantalla ----------
+    public void SelloGrande(string carrera, int n, Color tinta)
+    {
+        StartCoroutine(AnimarSello(carrera, n, tinta));
+    }
+
+    IEnumerator AnimarSello(string carrera, int n, Color tinta)
+    {
+        GameObject go = new GameObject("Sello gigante", typeof(RectTransform));
+        go.transform.SetParent(transform, false);
+        RectTransform rt = go.GetComponent<RectTransform>();
+        rt.anchorMin = rt.anchorMax = new Vector2(0.5f, 0.55f);
+        rt.sizeDelta = new Vector2(820, 420);
+        CanvasGroup cg = go.AddComponent<CanvasGroup>();
+        cg.blocksRaycasts = false;
+        RectTransform caja = Util.PanelArteCentro(go.transform, "Tinta", new Color(tinta.r, tinta.g, tinta.b, 0.16f), tinta, Vector2.zero, new Vector2(820, 420));
+        Util.PanelArteCentro(caja, "Borde interior", new Color(0, 0, 0, 0), tinta, Vector2.zero, new Vector2(770, 370));
+        Text t1 = Util.TextoUI(caja, "SELLO OBTENIDO", 40, tinta, TextAnchor.UpperCenter, Vector2.zero, Vector2.one, new Vector2(0, 0), new Vector2(0, -40));
+        t1.fontStyle = FontStyle.Bold;
+        Text t2 = Util.TextoUI(caja, carrera.ToUpper(), 96, tinta, TextAnchor.MiddleCenter, Vector2.zero, Vector2.one, new Vector2(20, 0), new Vector2(-20, 0));
+        t2.fontStyle = FontStyle.Bold;
+        t2.resizeTextForBestFit = true; t2.resizeTextMinSize = 40; t2.resizeTextMaxSize = 96;
+        Text t3 = Util.TextoUI(caja, n + " / 4", 44, tinta, TextAnchor.LowerCenter, Vector2.zero, Vector2.one, new Vector2(0, 36), Vector2.zero);
+        t3.fontStyle = FontStyle.Bold;
+        rt.localRotation = Quaternion.Euler(0f, 0f, -11f);
+
+        // Cae desde grande
+        float t = 0f;
+        while (t < 0.2f)
+        {
+            t += Time.unscaledDeltaTime;
+            float k = Mathf.Clamp01(t / 0.2f);
+            float esc = Mathf.Lerp(3.2f, 1f, k * k);
+            rt.localScale = new Vector3(esc, esc, 1f);
+            cg.alpha = k;
+            yield return null;
+        }
+        rt.localScale = Vector3.one;
+        cg.alpha = 1f;
+        Golpe(0.5f);
+        Sonido.Efecto("sello", 1f, 0.8f);
+        Sonido.Efecto("golpe", 0.6f, 0.6f);
+        if (n >= 4) Sonido.Efecto("logro", 0.7f, 1f);
+        t = 0f;
+        while (t < 1.4f) { t += Time.unscaledDeltaTime; yield return null; }
+        t = 0f;
+        while (t < 0.5f) { t += Time.unscaledDeltaTime; cg.alpha = 1f - t / 0.5f; yield return null; }
+        Destroy(go);
+    }
 
     // Brillo (opciones): 1 normal · menos de 1 más oscuro · más de 1 más claro. Va encima de todo.
     Image capaBrillo;

@@ -38,14 +38,14 @@ public static class Dificultad
     //   Cachimbo = BÁSICO (lógica, diagramas de flujo y para qué sirve cada cosa)
     //   Universitario = INTERMEDIO
     //   Titulación y Pesadilla = AVANZADO
-    public static NivelReto Reto
+    public static NivelReto Reto { get { return RetoDe(Actual); } }
+
+    // Nivel de reto que corresponde a cada dificultad.
+    public static NivelReto RetoDe(Nivel n)
     {
-        get
-        {
-            if (Actual == Nivel.Cachimbo) return NivelReto.Basico;
-            if (Actual == Nivel.Universitario) return NivelReto.Intermedio;
-            return NivelReto.Avanzado;
-        }
+        if (n == Nivel.Cachimbo) return NivelReto.Basico;
+        if (n == Nivel.Universitario) return NivelReto.Intermedio;
+        return NivelReto.Avanzado;
     }
 
     public static readonly string[] NombresReto = { "BÁSICO", "INTERMEDIO", "AVANZADO" };

@@ -623,8 +623,12 @@ public class Juego : MonoBehaviour
 
         System.Text.StringBuilder sb = new System.Text.StringBuilder();
         for (int i = 0; i < 4; i++)
+        {
+            int reto = (int)Dificultad.RetoDe((Nivel)i);
             sb.Append("<color=").Append(Dificultad.Colores[i]).Append("><b>").Append(i + 1).Append(".  ").Append(Dificultad.Nombres[i])
-              .Append("</b></color>\n<size=24><color=#bbbbbb>").Append(Dificultad.Descripciones[i]).Append("</color></size>\n\n");
+              .Append("</b></color>   <size=22><color=").Append(Dificultad.ColoresReto[reto]).Append(">· Retos ").Append(Dificultad.NombresReto[reto])
+              .Append("</color></size>\n<size=24><color=#bbbbbb>").Append(Dificultad.Descripciones[i]).Append("</color></size>\n\n");
+        }
         ui.MostrarPantalla("DIFICULTAD", sb.ToString(), "Presiona 1, 2, 3 o 4", Util.Hex("#07060b"));
         yield return new WaitForSeconds(0.3f);
         int n = 0;

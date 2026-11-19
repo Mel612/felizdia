@@ -195,7 +195,8 @@ public class UIJuego : MonoBehaviour
         StringBuilder sb = new StringBuilder();
         if (Protagonista.EsMateo) { PasaporteMateo(sb, j); txtPasaporte.text = sb.ToString(); }
         else {
-        sb.Append("<b>PASAPORTE DE CARRERAS</b>\n");
+        sb.Append("<b>PASAPORTE DE CARRERAS</b>  <color=").Append(Dificultad.ColorHex).Append(">· ").Append(Dificultad.Nombre).Append("</color>\n");
+        sb.Append("<color=#bbbbbb>Retos de las carreras: </color><color=").Append(Dificultad.ColorReto).Append(">").Append(Dificultad.NombreReto).Append("</color>\n");
         sb.Append(Linea(Ids.SelloMedicina, "Medicina (Piso 3)"));
         sb.Append(Linea(Ids.SelloDerecho, "Derecho (Piso 1)"));
         sb.Append(Linea(Ids.SelloPeriodismo, "Periodismo (Piso 2)"));

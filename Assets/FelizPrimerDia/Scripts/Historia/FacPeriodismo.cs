@@ -49,19 +49,62 @@ public class FacPeriodismo : Facultad
         {
             "¡Hola! Este es el set de TV de PERIODISMO. También tenemos cabina de radio y sala de edición.",
             "En Periodismo aprendes a investigar, entrevistar, redactar noticias, presentar en cámara y producir contenido digital.",
-            "Tu prueba: presentar una noticia EN VIVO. Párate en la X y sigue el teleprompter: presiona cada flecha a tiempo."
+            Dificultad.SegunReto(
+                "Una noticia sigue un orden lógico, como un diagrama de flujo. Tu prueba: responde cómo se arma una noticia (teclas 1-4).",
+                "Tu prueba: presentar una noticia EN VIVO. Párate en la X y sigue el teleprompter: presiona cada flecha a tiempo.",
+                "Tu prueba: una noticia larga EN VIVO y sin pausas. Párate en la X y sigue el teleprompter: presiona cada flecha a tiempo.")
         };
         yield return FlujoGuia("Sofía", explicacion, delegate
         {
+            if (Dificultad.Reto == NivelReto.Basico) return RetoBasico();
             J.Teletransportar(marca);
-            MJSecuencia mj = Minijuego.Crear<MJSecuencia>("¡AL AIRE!", "Lee el teleprompter sin trabarte: presiona la flecha de cada palabra.");
-            mj.palabras = new string[] { "Buenos", "días,", "La", "Paz.", "Hoy", "comienza", "la", "Semana", "de", "Inducción", "en", "Unifranz." };
-            mj.ventana = 1.5f;
+            MJSecuencia mj = Minijuego.Crear<MJSecuencia>(TituloReto("¡AL AIRE!"), "Lee el teleprompter sin trabarte: presiona la flecha de cada palabra.");
+            if (Dificultad.Reto == NivelReto.Avanzado)
+            {
+                mj.palabras = new string[] { "Buenos", "días,", "La", "Paz.", "Hoy", "comienza", "la", "Semana", "de", "Inducción", "en", "Unifranz,", "con", "más", "de", "mil", "estudiantes", "nuevos." };
+                mj.ventana = 1.25f;
+            }
+            else
+            {
+                mj.palabras = new string[] { "Buenos", "días,", "La", "Paz.", "Hoy", "comienza", "la", "Semana", "de", "Inducción", "en", "Unifranz." };
+                mj.ventana = 1.5f;
+            }
             mj.maxErrores = 2;
             mj.textoExito = "¡QUÉ BUENA TOMA!";
             mj.textoFallo = "TE TRABASTE...";
             return mj;
         }, "dom_periodismo");
+    }
+
+    // BÁSICO: el orden lógico de una noticia y las decisiones antes de publicar.
+    Minijuego RetoBasico()
+    {
+        MJPreguntas mj = Minijuego.Crear<MJPreguntas>(TituloReto("ARMA LA NOTICIA"), "Elige la respuesta correcta (teclas 1-4).");
+        mj.maxErrores = 2;
+        mj.textoExito = "¡NOTICIA LISTA PARA SALIR!";
+        mj.textoFallo = "ESA NOTICIA NO SALE AL AIRE";
+        mj.etiquetaRonda = "Pregunta";
+        mj.AgregarRondaConRespuesta("Orden de una noticia: ¿qué va PRIMERO?", "Correcto: titular, entrada, cuerpo y cierre.", 1,
+            "El cierre",
+            "El titular",
+            "El cuerpo",
+            "La firma del periodista");
+        mj.AgregarRondaConRespuesta("¿Para qué sirve la ENTRADA de una noticia?", "Así es: resume lo más importante en pocas líneas.", 0,
+            "Para resumir lo más importante al inicio",
+            "Para poner la publicidad",
+            "Para despedirse del público",
+            "Para escribir la fecha");
+        mj.AgregarRondaConRespuesta("DECISIÓN: ¿La fuente está verificada?  → NO.  ¿Qué haces?", "Bien: primero se verifica, después se publica.", 2,
+            "Publicarla igual, es urgente",
+            "Inventar los datos que faltan",
+            "No publicar todavía y verificar la información",
+            "Compartirla solo en redes sociales");
+        mj.AgregarRondaConRespuesta("Las 5 W son: qué, quién, cuándo, dónde y...", "¡Exacto! ...y por qué.", 3,
+            "cuánto cuesta",
+            "quién la escribió",
+            "qué opino yo",
+            "por qué");
+        return mj;
     }
 
     protected override IEnumerator EventoTerror()

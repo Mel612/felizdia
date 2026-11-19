@@ -58,11 +58,16 @@ public class FacSistemas : Facultad
             "¡Hola! Este es el Laboratorio de Computación de INGENIERÍA DE SISTEMAS.",
             "Aquí programamos, armamos redes, administramos servidores y bases de datos, y desarrollamos software.",
             "De hecho, el sistema de inscripciones de la U lo mantienen estudiantes y docentes de aquí.",
-            "Tu prueba: este programa en C++ está desordenado. Ordena las líneas (1-5) para que compile. ¡Rápido!"
+            Dificultad.SegunReto(
+                "Antes de programar se piensa con DIAGRAMAS DE FLUJO. Tu prueba: dime para qué sirve cada símbolo (teclas 1-4).",
+                "Un ALGORITMO es una lista de pasos en orden. Tu prueba: ordena los pasos para sumar dos números (teclas 1-5).",
+                "Tu prueba: este programa en C++ está desordenado. Ordena las líneas (1-5) para que compile. ¡Rápido!")
         };
         yield return FlujoGuia("Bruno", explicacion, delegate
         {
-            MJOrdenar mj = Minijuego.Crear<MJOrdenar>("COMPILA O MUERE", "Ordena las líneas de código para que el programa compile.");
+            if (Dificultad.Reto == NivelReto.Basico) return RetoBasico();
+            if (Dificultad.Reto == NivelReto.Intermedio) return RetoIntermedio();
+            MJOrdenar mj = Minijuego.Crear<MJOrdenar>(TituloReto("COMPILA O MUERE"), "Ordena las líneas de código para que el programa compile.");
             mj.ordenCorrecto.Add("int main() {");
             mj.ordenCorrecto.Add("    string nombre = \"Valeria\";");
             mj.ordenCorrecto.Add("    cout << \"Hola, \" << nombre;");
@@ -77,6 +82,61 @@ public class FacSistemas : Facultad
             mj.tituloDerecha = "main.cpp";
             return mj;
         }, "dom_sistemas");
+    }
+
+    // BÁSICO: para qué sirve cada símbolo del diagrama de flujo.
+    Minijuego RetoBasico()
+    {
+        MJPreguntas mj = Minijuego.Crear<MJPreguntas>(TituloReto("DIAGRAMA DE FLUJO"), "Elige para qué sirve cada símbolo (teclas 1-4).");
+        mj.maxErrores = 2;
+        mj.textoExito = "¡YA PIENSAS COMO PROGRAMADORA!";
+        mj.textoFallo = "REPASA LOS SÍMBOLOS";
+        mj.etiquetaRonda = "Símbolo";
+        mj.AgregarRondaConRespuesta("¿Qué símbolo marca el INICIO y el FIN de un diagrama de flujo?", "El óvalo (terminal) abre y cierra el diagrama.", 1,
+            "El rombo",
+            "El óvalo",
+            "El rectángulo",
+            "La flecha");
+        mj.AgregarRondaConRespuesta("¿Para qué sirve el RECTÁNGULO?", "Exacto: ahí van los procesos, como suma = a + b.", 0,
+            "Para un proceso o cálculo (por ejemplo: suma = a + b)",
+            "Para hacer una pregunta de sí o no",
+            "Para terminar el programa",
+            "Para escribir un comentario");
+        mj.AgregarRondaConRespuesta("¿Qué símbolo se usa para tomar una DECISIÓN (sí / no)?", "El rombo pregunta, y de él salen dos caminos.", 2,
+            "El óvalo",
+            "El paralelogramo",
+            "El rombo",
+            "El círculo");
+        mj.AgregarRondaConRespuesta("¿Para qué sirve el PARALELOGRAMO?", "Bien: leer datos o mostrar resultados.", 3,
+            "Para repetir pasos",
+            "Para dibujar la pantalla",
+            "Para guardar el archivo",
+            "Para la entrada o salida de datos (leer o mostrar)");
+        mj.AgregarRondaConRespuesta("¿Qué indican las FLECHAS que unen los símbolos?", "Así es: marcan el orden en que se siguen los pasos.", 1,
+            "Que el programa tiene un error",
+            "El orden en que se siguen los pasos",
+            "Cuánto tarda cada paso",
+            "Nada, son decoración");
+        return mj;
+    }
+
+    // INTERMEDIO: ordenar un algoritmo sencillo (sumar dos números).
+    Minijuego RetoIntermedio()
+    {
+        MJOrdenar mj = Minijuego.Crear<MJOrdenar>(TituloReto("ALGORITMO"), "Ordena los pasos del algoritmo para sumar dos números.");
+        mj.ordenCorrecto.Add("INICIO");
+        mj.ordenCorrecto.Add("Leer los números A y B");
+        mj.ordenCorrecto.Add("Calcular: Suma = A + B");
+        mj.ordenCorrecto.Add("Mostrar la Suma");
+        mj.ordenCorrecto.Add("FIN");
+        mj.pista = "Pista: primero se leen los datos, luego se calcula y al final se muestra.";
+        mj.tiempoLimite = 40f;
+        mj.maxErrores = 2;
+        mj.textoExito = "¡ALGORITMO CORRECTO!";
+        mj.textoFallo = "EL ALGORITMO NO FUNCIONA";
+        mj.tituloIzquierda = "PASOS";
+        mj.tituloDerecha = "MI ALGORITMO";
+        return mj;
     }
 
     IEnumerator HablarVargas()

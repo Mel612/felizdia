@@ -2,6 +2,9 @@ using UnityEngine;
 
 public enum Nivel { Cachimbo, Universitario, Titulacion, Pesadilla }
 
+// Nivel de los retos de cada carrera (lo que te piden los guías en cada facultad).
+public enum NivelReto { Basico, Intermedio, Avanzado }
+
 // =====================================================================
 //  DIFICULTAD Y MODO DE JUEGO (se eligen al empezar la partida)
 //    Cachimbo      fácil: Pepino lento, más tiempo, pistas extra y objetivo marcado
@@ -29,6 +32,37 @@ public static class Dificultad
 
     public static string Nombre { get { return Nombres[(int)Actual]; } }
     public static string ColorHex { get { return Colores[(int)Actual]; } }
+
+    // ---------- Retos de las carreras ----------
+    // Cada carrera tiene 3 niveles de reto según la dificultad elegida:
+    //   Cachimbo = BÁSICO (lógica, diagramas de flujo y para qué sirve cada cosa)
+    //   Universitario = INTERMEDIO
+    //   Titulación y Pesadilla = AVANZADO
+    public static NivelReto Reto { get { return RetoDe(Actual); } }
+
+    // Nivel de reto que corresponde a cada dificultad.
+    public static NivelReto RetoDe(Nivel n)
+    {
+        if (n == Nivel.Cachimbo) return NivelReto.Basico;
+        if (n == Nivel.Universitario) return NivelReto.Intermedio;
+        return NivelReto.Avanzado;
+    }
+
+    public static readonly string[] NombresReto = { "BÁSICO", "INTERMEDIO", "AVANZADO" };
+    public static readonly string[] ColoresReto = { "#7bd389", "#ffd166", "#ff4d4d" };
+    public static string NombreReto { get { return NombresReto[(int)Reto]; } }
+    public static string ColorReto { get { return ColoresReto[(int)Reto]; } }
+
+    // Devuelve el valor que corresponde al nivel de reto actual.
+    public static T SegunReto<T>(T basico, T intermedio, T avanzado)
+    {
+        switch (Reto)
+        {
+            case NivelReto.Basico: return basico;
+            case NivelReto.Intermedio: return intermedio;
+            default: return avanzado;
+        }
+    }
 
     // ---------- Ajustes ----------
     public static float VelPepino { get { return new[] { 0.8f, 1f, 1.15f, 1.25f }[(int)Actual]; } }

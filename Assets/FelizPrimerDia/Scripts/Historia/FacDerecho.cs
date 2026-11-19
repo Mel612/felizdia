@@ -53,11 +53,15 @@ public class FacDerecho : Facultad
             "Bienvenida a la Sala de Juicios Simulados de DERECHO.",
             "Aquí practicamos juicios como si fueran reales: hay juez, fiscal, defensa y testigos.",
             "En Derecho estudias leyes, la Constitución, derecho penal, civil, laboral... y aprendes a argumentar y defender casos.",
-            "Tu prueba: un juicio simulado. Cuando un testigo mienta, elige la EVIDENCIA que lo contradice (teclas 1-4)."
+            Dificultad.SegunReto(
+                "Un proceso judicial también es un flujo de pasos. Tu prueba: dime qué sigue y quién hace qué en un juicio (teclas 1-4).",
+                "Tu prueba: un juicio simulado. Cuando un testigo mienta, elige la EVIDENCIA que lo contradice (teclas 1-4).",
+                "Tu prueba: un juicio largo y con el reloj corriendo. Cuando un testigo mienta, elige la EVIDENCIA que lo contradice.")
         };
         yield return FlujoGuia("Martín", explicacion, delegate
         {
-            MJPreguntas mj = Minijuego.Crear<MJPreguntas>("¡OBJECIÓN!", "Escucha al testigo y presenta la evidencia que lo contradice.");
+            if (Dificultad.Reto == NivelReto.Basico) return RetoBasico();
+            MJPreguntas mj = Minijuego.Crear<MJPreguntas>(TituloReto("¡OBJECIÓN!"), "Escucha al testigo y presenta la evidencia que lo contradice.");
             mj.maxErrores = 1;
             mj.textoExito = "¡OBJECIÓN ACEPTADA!";
             mj.textoFallo = "OBJECIÓN DENEGADA";
@@ -76,8 +80,53 @@ public class FacDerecho : Facultad
                 "El certificado de nacimiento del testigo",
                 "Un mapa de La Paz",
                 "Una nota de la materia de Historia");
+            if (Dificultad.Reto == NivelReto.Avanzado)
+            {
+                mj.tiempoPorRonda = 20f;
+                mj.AgregarRondaConRespuesta("TESTIGO: \"Ese día no fui a la universidad, estuve enfermo en casa.\"", "Su propio registro de asistencia lo contradice.", 3,
+                    "Una receta médica de hace un año",
+                    "La lista de materias del semestre",
+                    "Una foto del patio vacío",
+                    "El registro de ASISTENCIA con su ingreso a las 8:05 ese día");
+                mj.AgregarRondaConRespuesta("TESTIGO: \"No conozco el laboratorio; nunca entré ahí.\"", "La cámara lo muestra entrando. ¡Objeción aceptada!", 1,
+                    "Un plano de la universidad",
+                    "Video de la CÁMARA de seguridad: el testigo entrando al laboratorio",
+                    "El reglamento del laboratorio",
+                    "Un afiche de la Semana de Inducción");
+            }
             return mj;
         }, "dom_derecho");
+    }
+
+    // BÁSICO: el flujo de un proceso judicial y para qué sirve cada persona del juicio.
+    Minijuego RetoBasico()
+    {
+        MJPreguntas mj = Minijuego.Crear<MJPreguntas>(TituloReto("¿QUIÉN HACE QUÉ?"), "Elige la respuesta correcta (teclas 1-4).");
+        mj.maxErrores = 2;
+        mj.textoExito = "¡YA CONOCES EL JUICIO!";
+        mj.textoFallo = "REPASA LOS PAPELES DEL JUICIO";
+        mj.etiquetaRonda = "Pregunta";
+        mj.AgregarRondaConRespuesta("Flujo de un proceso: DENUNCIA  →  ¿?  →  JUICIO  →  SENTENCIA.  ¿Qué va en el medio?", "Correcto: después de la denuncia se investiga.", 0,
+            "La investigación",
+            "La graduación",
+            "La apelación",
+            "Las vacaciones");
+        mj.AgregarRondaConRespuesta("¿Quién DECIDE la sentencia en un juicio?", "Así es: el juez escucha a todos y decide.", 2,
+            "El testigo",
+            "El abogado defensor",
+            "El juez",
+            "El público");
+        mj.AgregarRondaConRespuesta("¿Quién ACUSA en nombre de la sociedad?", "Bien: el fiscal representa a la sociedad.", 1,
+            "El juez",
+            "El fiscal",
+            "El secretario",
+            "El acusado");
+        mj.AgregarRondaConRespuesta("DECISIÓN: ¿Hay pruebas suficientes?  → NO.  ¿Qué debe pasar?", "Exacto: sin pruebas, no se puede condenar.", 3,
+            "Se condena igual al acusado",
+            "Se adivina quién fue",
+            "Se elige al culpable por sorteo",
+            "No se puede condenar; se sigue investigando");
+        return mj;
     }
 
     protected override IEnumerator EventoTerror()

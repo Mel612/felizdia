@@ -69,6 +69,12 @@ public abstract class Facultad : MonoBehaviour
         ocupado = false;
     }
 
+    // Título del minijuego con el nivel de reto, por ejemplo "DIAGRAMA DE FLUJO · BÁSICO".
+    protected static string TituloReto(string titulo)
+    {
+        return titulo + "  ·  " + Dificultad.NombreReto;
+    }
+
     // ---------- Flujo común del guía ----------
     protected IEnumerator FlujoGuia(string guia, string[] explicacion, Func<Minijuego> crearMinijuego, string idDominio)
     {

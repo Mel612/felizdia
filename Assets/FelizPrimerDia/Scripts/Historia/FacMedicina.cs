@@ -52,15 +52,59 @@ public class FacMedicina : Facultad
             "¡Hola! Bienvenida a la Sala de Simulación de MEDICINA.",
             "Estos maniquíes respiran, tienen pulso y hasta 'sangran'. Así practicamos antes de atender pacientes reales.",
             "En Medicina estudias anatomía, fisiología, farmacología... y haces prácticas en la clínica y en hospitales.",
-            "Tu prueba: hacer RCP (reanimación). Presiona ESPACIO justo cuando la línea pase por la zona verde. ¡Al ritmo!"
+            Dificultad.SegunReto(
+                "En Medicina todo sigue un orden, como un diagrama de flujo. Tu prueba: responde lo básico de la bioseguridad y la atención (teclas 1-4).",
+                "Tu prueba: hacer RCP (reanimación). Presiona ESPACIO justo cuando la línea pase por la zona verde. ¡Al ritmo!",
+                "Tu prueba: RCP de verdad. Más compresiones, menos margen y casi sin errores. Presiona ESPACIO en la zona verde.")
         };
         yield return FlujoGuia("Lucía", explicacion, delegate
         {
-            MJRitmo mj = Minijuego.Crear<MJRitmo>("RCP AL RITMO", "Presiona ESPACIO cuando la línea blanca pase por la zona verde.");
-            mj.objetivo = 8;
-            mj.maxFallos = 3;
+            if (Dificultad.Reto == NivelReto.Basico) return RetoBasico();
+            MJRitmo mj = Minijuego.Crear<MJRitmo>(TituloReto("RCP AL RITMO"), "Presiona ESPACIO cuando la línea blanca pase por la zona verde.");
+            if (Dificultad.Reto == NivelReto.Avanzado)
+            {
+                mj.objetivo = 12;
+                mj.maxFallos = 2;
+                mj.anchoZona = 0.13f;
+            }
+            else
+            {
+                mj.objetivo = 8;
+                mj.maxFallos = 3;
+            }
             return mj;
         }, "dom_medicina");
+    }
+
+    // BÁSICO: lógica de la atención y bioseguridad, con pasos y decisiones como en un diagrama de flujo.
+    Minijuego RetoBasico()
+    {
+        MJPreguntas mj = Minijuego.Crear<MJPreguntas>(TituloReto("PRIMEROS PASOS"), "Elige la respuesta correcta (teclas 1-4).");
+        mj.maxErrores = 2;
+        mj.textoExito = "¡LISTA PARA LA SIMULACIÓN!";
+        mj.textoFallo = "REPASA LO BÁSICO";
+        mj.etiquetaRonda = "Pregunta";
+        mj.AgregarRondaConRespuesta("Flujo del lavado de manos: ¿cuál es el PRIMER paso?", "Primero se mojan las manos; luego jabón, frotar, enjuagar y secar.", 2,
+            "Secarse con la toalla",
+            "Frotar entre los dedos",
+            "Mojarse las manos con agua",
+            "Ponerse los guantes");
+        mj.AgregarRondaConRespuesta("DECISIÓN: ¿El paciente respira?  → NO.  ¿Qué sigue en el diagrama?", "Correcto: pedir ayuda y empezar la RCP.", 0,
+            "Pedir ayuda e iniciar la RCP",
+            "Esperar a que despierte solo",
+            "Darle agua",
+            "Ir a buscar su historia clínica");
+        mj.AgregarRondaConRespuesta("¿Para qué sirven la BATA y el BARBIJO?", "Así es: protegen al paciente y a ti de contagios.", 1,
+            "Para verse elegante en la clínica",
+            "Para protegerse a uno mismo y al paciente de contagios",
+            "Para que no haga frío",
+            "Para saber quién es el docente");
+        mj.AgregarRondaConRespuesta("SIGNOS VITALES: ¿cuál es una temperatura corporal normal?", "Bien: alrededor de 36,5 °C es lo normal.", 3,
+            "30 °C",
+            "40 °C",
+            "42 °C",
+            "Alrededor de 36,5 °C");
+        return mj;
     }
 
     protected override IEnumerator EventoTerror()

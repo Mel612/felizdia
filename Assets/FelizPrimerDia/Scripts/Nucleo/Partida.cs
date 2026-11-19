@@ -142,6 +142,17 @@ public static class Partida
         Cargar(EscenaBienvenida);
     }
 
+    // Cierra el juego (en el editor de Unity, detiene el Play).
+    public static void SalirDelJuego()
+    {
+        Ajustes.Guardar();
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
+
     // Vuelve a la pantalla de inicio (si la escena del menú existe; si no, a la Planta Baja)
     public static void IrAlMenu()
     {

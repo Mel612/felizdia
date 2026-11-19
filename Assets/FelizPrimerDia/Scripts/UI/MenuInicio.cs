@@ -112,6 +112,7 @@ public class MenuInicio : MonoBehaviour
         ids.Add("opciones"); nombres.Add("OPCIONES");
         ids.Add("como"); nombres.Add("CÓMO JUGAR");
         ids.Add("creditos"); nombres.Add("CRÉDITOS");
+        ids.Add("salir"); nombres.Add("SALIR");
         seleccion = Mathf.Clamp(seleccion, 0, ids.Count - 1);
     }
 
@@ -143,7 +144,7 @@ public class MenuInicio : MonoBehaviour
         txtOpciones.lineSpacing = 1.25f;
         txtOpciones.gameObject.AddComponent<Outline>().effectColor = Color.black;
 
-        Util.TextoUI(raiz, "Flechas: elegir     E: aceptar     M: sonido", 22, new Color(1, 1, 1, 0.5f), TextAnchor.LowerLeft, new Vector2(0.06f, 0.015f), new Vector2(0.5f, 0.07f), cero, cero);
+        Util.TextoUI(raiz, "Flechas: elegir     E: aceptar     Esc: volver     M: sonido", 22, new Color(1, 1, 1, 0.5f), TextAnchor.LowerLeft, new Vector2(0.06f, 0.015f), new Vector2(0.5f, 0.07f), cero, cero);
         txtMateo = Util.TextoUI(raiz, "", 22, Color.white, TextAnchor.LowerRight, new Vector2(0.5f, 0.015f), new Vector2(0.97f, 0.07f), cero, cero);
         txtMateo.gameObject.AddComponent<Outline>().effectColor = Color.black;
 
@@ -293,6 +294,7 @@ public class MenuInicio : MonoBehaviour
             }
             case "opciones": StartCoroutine(AbrirOpciones()); return;
             case "creditos": StartCoroutine(VerCreditos()); return;
+            case "salir": Partida.SalirDelJuego(); return;
         }
 
         infoAbierta = true;
@@ -303,7 +305,7 @@ public class MenuInicio : MonoBehaviour
             string t = "<b>CARGAR PARTIDA</b>\n\nLas partidas se guardan en las MÁQUINAS DE ESCRIBIR\nque hay junto a las escaleras de cada piso.\n\n";
             for (int i = 1; i <= Guardado.Espacios; i++)
                 t += "<color=#ffd166>" + i + "</color>   " + Guardado.Resumen(Guardado.Leer(i)) + "\n\n";
-            txtInfo.text = t + "<color=#888888>Elige el espacio con su número  ·  E para volver</color>";
+            txtInfo.text = t + "<color=#888888>Elige el espacio con su número  ·  E o Esc para volver</color>";
         }
         else if (id == "cuarto")
         {
@@ -315,9 +317,9 @@ public class MenuInicio : MonoBehaviour
                        "Las puertas y las cámaras gastan energía.\n\n";
             for (int i = 1; i <= 3; i++)
                 t += i <= max ? "<color=#7bd389>" + i + "  ·  NOCHE " + i + "</color>\n" : "<color=#555555>" + i + "  ·  NOCHE " + i + " (bloqueada)</color>\n";
-            txtInfo.text = t + "\n<color=#888888>Elige la noche con su número  ·  E para volver</color>";
+            txtInfo.text = t + "\n<color=#888888>Elige la noche con su número  ·  E o Esc para volver</color>";
         }
-        else if (id == "logros") txtInfo.text = "<size=22>" + Logros.Texto() + "</size>\n<color=#888888>E para volver</color>";
+        else if (id == "logros") txtInfo.text = "<size=22>" + Logros.Texto() + "</size>\n<color=#888888>E o Esc para volver</color>";
         else if (id == "como")
             txtInfo.text =
                 "<b>CÓMO JUGAR</b>\n\n" +
@@ -330,6 +332,6 @@ public class MenuInicio : MonoBehaviour
                 "<color=#ffd166>Tab</color>  cuaderno de pistas y logros     <color=#ffd166>M</color>  sonido\n" +
                 "<color=#ffd166>P</color>  pausa (opciones, volver al menú)\n" +
                 "<color=#ffd166>Espacio</color>  saltar (persecuciones)     <color=#ffd166>Esc</color>  saltar cinemáticas\n\n" +
-                "<color=#888888>E para volver</color>";
+                "<color=#888888>E o Esc para volver</color>";
     }
 }
